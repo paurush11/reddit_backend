@@ -1,0 +1,11 @@
+export const __prod__: boolean = process.env.NODE_ENV === "production";
+export const COOKIE_NAME: string = "qid";
+export const TEST_EMAIL: string = "paurushbatishfbd@gmail.com";
+export const TEST_PASSWORD: string = "ugrzgcpcxbdwjlpe";
+export const FORGOT_PASSWORD: string = "forgot-password:";
+export const NODEMAILERGENERATEDAPPPASSWORD: string = "ugrzgcpcxbdwjlpe";
+export const DB_NAME: string = "lireddit2";
+export const DATASRC_USERNAME: string = "";
+export const DATASRC_PASSWORD: string = "";
+export const DB_PORT: number = 5432;
+export const DB_HOST: string = "localhost";
