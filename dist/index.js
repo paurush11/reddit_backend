@@ -11,10 +11,10 @@ const ioredis_1 = __importDefault(require("ioredis"));
 require("reflect-metadata");
 const type_graphql_1 = require("type-graphql");
 const constants_1 = require("./constants");
+const dataSource_1 = require("./dataSource");
 const hello_1 = require("./resolvers/hello");
 const post_1 = require("./resolvers/post");
 const user_1 = require("./resolvers/user");
-const dataSource_1 = require("./dataSource");
 const main = async () => {
     dataSource_1.AppDataSource.initialize()
         .then(() => {

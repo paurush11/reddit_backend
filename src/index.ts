@@ -6,11 +6,11 @@ import Redis from "ioredis";
 import "reflect-metadata";
 import { buildSchema } from "type-graphql";
 import { COOKIE_NAME, __prod__ } from "./constants";
+import { AppDataSource } from "./dataSource";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 import { MyContext } from "./types";
-import { AppDataSource } from "./dataSource";
 
 const main = async () => {
   AppDataSource.initialize()
