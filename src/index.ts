@@ -28,6 +28,7 @@ const main = async () => {
       credentials: true,
     }),
   );
+
   app.set("trust proxy", !__prod__); // used to see localhost cookies
   // app.set('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept')
   app.set("Access-Control-Allow-Credentials", true);
