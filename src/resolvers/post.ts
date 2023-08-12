@@ -23,21 +23,24 @@ class PostInput {
   text: string;
 }
 
-@Resolver() 
+@Resolver()
 export class PostResolver {
   @Query(() => [Post])
   async posts(
-    @Arg('limit') limit: number,
-    @Arg('cursor', ()=> String, {nullable: true}) cursor: string| null  
+    @Arg("limit") limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
   ): Promise<Post[]> {
-    const realLimit = Math.min(50, limit)
-    const qb = await AppDataSource.getRepository(Post).createQueryBuilder("p").orderBy('"createdAt"').take(realLimit) 
-    if(cursor){
-      qb.where('"createdAt"< :cursor', {cursor: new Date(parseInt(cursor))})
+    const realLimit = Math.min(50, limit);
+    const qb = await AppDataSource.getRepository(Post)
+      .createQueryBuilder("p")
+      .orderBy('"createdAt"')
+      .take(realLimit);
+    if (cursor) {
+      qb.where('"createdAt"< :cursor', { cursor: new Date(parseInt(cursor)) });
     }
-    return qb.getMany()
+    return qb.getMany();
   }
- 
+
   @Query(() => Post, { nullable: true })
   post(@Arg("identifier", () => Int) id: number): Promise<Post | null> {
     return Post.findOne({

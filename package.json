@@ -11,7 +11,9 @@
     "prettier": "prettier --write 'src/**/*.{js,ts,tsx,jsx}'",
     "dev": "prettier --check 'src/**/*.{js,ts,tsx,jsx}' && nodemon dist/index.js",
     "create:migration2": "typeorm migration:create src/migrations/migrations",
-    "codegen": "graphql-codegen --config codegen.ts"
+    "codegen": "graphql-codegen --config codegen.ts",
+    "run:migration": "yarn typeorm migration:run",
+    "typeorm": "npx typeorm-ts-node-commonjs --dataSource src/dataSource.ts"
   },
   "author": "Paurush Batish",
   "license": "MIT",

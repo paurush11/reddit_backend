@@ -33,7 +33,10 @@ PostInput = __decorate([
 let PostResolver = exports.PostResolver = class PostResolver {
     async posts(limit, cursor) {
         const realLimit = Math.min(50, limit);
-        const qb = await dataSource_1.AppDataSource.getRepository(Post_1.Post).createQueryBuilder("p").orderBy('"createdAt"').take(realLimit);
+        const qb = await dataSource_1.AppDataSource.getRepository(Post_1.Post)
+            .createQueryBuilder("p")
+            .orderBy('"createdAt"')
+            .take(realLimit);
         if (cursor) {
             qb.where('"createdAt"< :cursor', { cursor: new Date(parseInt(cursor)) });
         }
@@ -77,8 +80,8 @@ let PostResolver = exports.PostResolver = class PostResolver {
 };
 __decorate([
     (0, type_graphql_1.Query)(() => [Post_1.Post]),
-    __param(0, (0, type_graphql_1.Arg)('limit')),
-    __param(1, (0, type_graphql_1.Arg)('cursor', () => String, { nullable: true })),
+    __param(0, (0, type_graphql_1.Arg)("limit")),
+    __param(1, (0, type_graphql_1.Arg)("cursor", () => String, { nullable: true })),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)

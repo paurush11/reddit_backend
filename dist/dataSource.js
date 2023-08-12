@@ -5,6 +5,7 @@ const typeorm_1 = require("typeorm");
 const User_1 = require("./entities/User");
 const Post_1 = require("./entities/Post");
 const constants_1 = require("./constants");
+const _1691700865365_migrations_1 = require("./migrations/1691700865365-migrations");
 exports.AppDataSource = new typeorm_1.DataSource({
     type: "postgres",
     host: constants_1.DB_HOST,
@@ -15,5 +16,6 @@ exports.AppDataSource = new typeorm_1.DataSource({
     synchronize: true,
     logging: true,
     entities: [Post_1.Post, User_1.User],
+    migrations: [_1691700865365_migrations_1.Migrations1691700865366],
 });
 //# sourceMappingURL=dataSource.js.map
