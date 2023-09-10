@@ -33,10 +33,11 @@ export class PostResolver {
     const realLimit = Math.min(50, limit);
     const qb = await AppDataSource.getRepository(Post)
       .createQueryBuilder("p")
-      .orderBy('"createdAt"')
+      .orderBy('"createdAt"', 'DESC')
       .take(realLimit);
     if (cursor) {
-      qb.where('"createdAt"< :cursor', { cursor: new Date(parseInt(cursor)) });
+      
+      qb.where('"createdAt"< :cursor', { cursor: new Date(Date.parse(cursor)) });
     }
     return qb.getMany();
   }
