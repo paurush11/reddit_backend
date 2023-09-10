@@ -5,6 +5,7 @@ import {
   InputType,
   Int,
   Mutation,
+  ObjectType,
   Query,
   Resolver,
   UseMiddleware,
@@ -13,6 +14,7 @@ import { Post } from "../entities/Post";
 import { MyContext } from "src/types";
 import { isAuth } from "../middleware/isAuth";
 import { AppDataSource } from "../dataSource";
+
 
 @InputType()
 class PostInput {
@@ -23,23 +25,36 @@ class PostInput {
   text: string;
 }
 
+@ObjectType()
+class PaginatedPosts {
+  @Field(()=>[Post])
+  Posts: Post[]
+
+  @Field()
+  hasMore: boolean
+
+}
+
 @Resolver()
 export class PostResolver {
-  @Query(() => [Post])
+  @Query(() => PaginatedPosts)
   async posts(
     @Arg("limit") limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
-  ): Promise<Post[]> {
+  ): Promise<PaginatedPosts> {
     const realLimit = Math.min(50, limit);
+    const realLimitPlusOne = realLimit + 1;
     const qb = await AppDataSource.getRepository(Post)
       .createQueryBuilder("p")
       .orderBy('"createdAt"', 'DESC')
-      .take(realLimit);
+      .take(realLimitPlusOne);
     if (cursor) {
       
       qb.where('"createdAt"< :cursor', { cursor: new Date(Date.parse(cursor)) });
     }
-    return qb.getMany();
+    const posts =  await qb.getMany();
+
+    return {Posts: posts.slice(0, realLimit), hasMore: posts.length === realLimitPlusOne};
   }
 
   @Query(() => Post, { nullable: true })
