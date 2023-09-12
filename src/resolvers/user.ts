@@ -5,10 +5,12 @@ import {
   Arg,
   Ctx,
   Field,
+  FieldResolver,
   Mutation,
   ObjectType,
   Query,
   Resolver,
+  Root,
 } from "type-graphql";
 import { COOKIE_NAME, FORGOT_PASSWORD } from "../constants";
 import { UserNameOrEmailPassword } from "../utils/UserNameOrEmailPassword";
@@ -32,8 +34,19 @@ class UserResponse {
   user?: User;
 }
 
-@Resolver()
+@Resolver(User)
 export class UserResolver {
+ /// Field Level Resolver to see that if I am logged In I can see the email
+  @FieldResolver(()=>String)
+  email(@Root() user: User, @Ctx() ctx: MyContext ){
+    if(ctx.req.session.user === user._id){
+      return user.email
+    }else{
+      return ""
+    }
+
+  }
+
   @Query(() => User, { nullable: true })
   async Me(@Ctx() ctx: MyContext) {
     ///user not logged in

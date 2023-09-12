@@ -74,6 +74,14 @@ UserResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], UserResponse);
 let UserResolver = exports.UserResolver = class UserResolver {
+    email(user, ctx) {
+        if (ctx.req.session.user === user._id) {
+            return user.email;
+        }
+        else {
+            return "";
+        }
+    }
     async Me(ctx) {
         if (!ctx.req.session.user) {
             return null;
@@ -231,6 +239,14 @@ let UserResolver = exports.UserResolver = class UserResolver {
     }
 };
 __decorate([
+    (0, type_graphql_1.FieldResolver)(() => String),
+    __param(0, (0, type_graphql_1.Root)()),
+    __param(1, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [User_1.User, Object]),
+    __metadata("design:returntype", void 0)
+], UserResolver.prototype, "email", null);
+__decorate([
     (0, type_graphql_1.Query)(() => User_1.User, { nullable: true }),
     __param(0, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
@@ -292,6 +308,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "delete", null);
 exports.UserResolver = UserResolver = __decorate([
-    (0, type_graphql_1.Resolver)()
+    (0, type_graphql_1.Resolver)(User_1.User)
 ], UserResolver);
 //# sourceMappingURL=user.js.map
