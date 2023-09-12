@@ -47,15 +47,36 @@ let PostResolver = exports.PostResolver = class PostResolver {
     async posts(limit, cursor) {
         const realLimit = Math.min(50, limit);
         const realLimitPlusOne = realLimit + 1;
-        const qb = await dataSource_1.AppDataSource.getRepository(Post_1.Post)
-            .createQueryBuilder("p")
-            .orderBy('"createdAt"', 'DESC')
-            .take(realLimitPlusOne);
+        const replaceableValues = [realLimitPlusOne];
         if (cursor) {
-            qb.where('"createdAt"< :cursor', { cursor: new Date(Date.parse(cursor)) });
+            replaceableValues.push(new Date(Date.parse(cursor)));
         }
-        const posts = await qb.getMany();
-        return { Posts: posts.slice(0, realLimit), hasMore: posts.length === realLimitPlusOne };
+        const posts = await dataSource_1.AppDataSource.getRepository(Post_1.Post).query(`
+    select p.*, 
+    json_build_object(
+      '_id', u._id,
+      'username', u.username,
+      'email', u.email,
+      'createdAt', u."createdAt",
+      'updatedAt', u."updatedAt"
+    ) creator
+    from post p
+    inner join public.user u on u._id = p."creatorId"
+    ${cursor ? `where p."createdAt"< $2` : ""}
+    order by p."createdAt" DESC
+    limit $1`, replaceableValues);
+        posts.forEach((post) => {
+            post.createdAt = new Date(post.createdAt);
+            post.updatedAt = new Date(post.updatedAt);
+            if (post.creator) {
+                post.creator.createdAt = new Date(post.creator.createdAt);
+                post.creator.updatedAt = new Date(post.creator.updatedAt);
+            }
+        });
+        return {
+            Posts: posts.slice(0, realLimit),
+            hasMore: posts.length === realLimitPlusOne,
+        };
     }
     post(id) {
         return Post_1.Post.findOne({

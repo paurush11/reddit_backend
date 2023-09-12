@@ -15,7 +15,6 @@ import { MyContext } from "src/types";
 import { isAuth } from "../middleware/isAuth";
 import { AppDataSource } from "../dataSource";
 
-
 @InputType()
 class PostInput {
   @Field()
@@ -27,12 +26,11 @@ class PostInput {
 
 @ObjectType()
 class PaginatedPosts {
-  @Field(()=>[Post])
-  Posts: Post[]
+  @Field(() => [Post])
+  Posts: Post[];
 
   @Field()
-  hasMore: boolean
-
+  hasMore: boolean;
 }
 
 @Resolver()
@@ -44,17 +42,40 @@ export class PostResolver {
   ): Promise<PaginatedPosts> {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
-    const qb = await AppDataSource.getRepository(Post)
-      .createQueryBuilder("p")
-      .orderBy('"createdAt"', 'DESC')
-      .take(realLimitPlusOne);
+    const replaceableValues: any = [realLimitPlusOne];
     if (cursor) {
-      
-      qb.where('"createdAt"< :cursor', { cursor: new Date(Date.parse(cursor)) });
+      replaceableValues.push(new Date(Date.parse(cursor)));
     }
-    const posts =  await qb.getMany();
-
-    return {Posts: posts.slice(0, realLimit), hasMore: posts.length === realLimitPlusOne};
+    const posts = await AppDataSource.getRepository(Post).query(
+      `
+    select p.*, 
+    json_build_object(
+      '_id', u._id,
+      'username', u.username,
+      'email', u.email,
+      'createdAt', u."createdAt",
+      'updatedAt', u."updatedAt"
+    ) creator
+    from post p
+    inner join public.user u on u._id = p."creatorId"
+    ${cursor ? `where p."createdAt"< $2` : ""}
+    order by p."createdAt" DESC
+    limit $1`,
+      replaceableValues,
+    );
+    posts.forEach((post: { createdAt: string | number | Date; updatedAt: string | number | Date; creator: { createdAt: string | number | Date; updatedAt: string | number | Date; }; }) => {
+      post.createdAt = new Date(post.createdAt);
+      post.updatedAt = new Date(post.updatedAt);
+  
+      if (post.creator) {
+          post.creator.createdAt = new Date(post.creator.createdAt);
+          post.creator.updatedAt = new Date(post.creator.updatedAt);
+      }
+  });
+    return {
+      Posts: posts.slice(0, realLimit),
+      hasMore: posts.length === realLimitPlusOne,
+    };
   }
 
   @Query(() => Post, { nullable: true })
