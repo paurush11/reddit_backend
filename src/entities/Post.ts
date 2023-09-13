@@ -4,9 +4,11 @@ import {
   Column,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { User } from "./User";
+import { UpVotes } from "./Upvotes";
 
 @ObjectType()
 @Entity()
@@ -19,9 +21,12 @@ export class Post extends BaseEntity {
   @Column()
   creatorId: number;
 
-  @Field(()=>User)
+  @Field(() => User)
   @ManyToOne(() => User, (user) => user.posts)
   creator: User;
+
+  @OneToMany(() => UpVotes, (upVotes) => upVotes.post)
+  upVotes: UpVotes[];
 
   @Field()
   @Column({ type: "timestamptz" })

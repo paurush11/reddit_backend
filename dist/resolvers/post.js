@@ -85,6 +85,20 @@ let PostResolver = exports.PostResolver = class PostResolver {
             },
         });
     }
+    async vote(postId, value, ctx) {
+        const userId = ctx.req.session.user;
+        const isUpvote = value !== -1;
+        const realValue = isUpvote ? 1 : -1;
+        await dataSource_1.AppDataSource.getRepository(Post_1.Post).query(`
+    START TRANSACTION;
+    insert into up_votes ("userId", "postId", "value") values (${userId}, ${postId}, ${realValue});
+    update post 
+    set points = points + ${realValue}
+    where _id = ${postId};
+    COMMIT;
+    `);
+        return true;
+    }
     async createPost(input, ctx) {
         return Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: ctx.req.session.user })).save();
     }
@@ -129,6 +143,16 @@ __decorate([
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "post", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Boolean),
+    (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
+    __param(0, (0, type_graphql_1.Arg)("postId", () => type_graphql_1.Int)),
+    __param(1, (0, type_graphql_1.Arg)("value", () => type_graphql_1.Int)),
+    __param(2, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Number, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "vote", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => Post_1.Post),
     (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),

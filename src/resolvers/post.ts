@@ -63,15 +63,24 @@ export class PostResolver {
     limit $1`,
       replaceableValues,
     );
-    posts.forEach((post: { createdAt: string | number | Date; updatedAt: string | number | Date; creator: { createdAt: string | number | Date; updatedAt: string | number | Date; }; }) => {
-      post.createdAt = new Date(post.createdAt);
-      post.updatedAt = new Date(post.updatedAt);
-  
-      if (post.creator) {
+    posts.forEach(
+      (post: {
+        createdAt: string | number | Date;
+        updatedAt: string | number | Date;
+        creator: {
+          createdAt: string | number | Date;
+          updatedAt: string | number | Date;
+        };
+      }) => {
+        post.createdAt = new Date(post.createdAt);
+        post.updatedAt = new Date(post.updatedAt);
+
+        if (post.creator) {
           post.creator.createdAt = new Date(post.creator.createdAt);
           post.creator.updatedAt = new Date(post.creator.updatedAt);
-      }
-  });
+        }
+      },
+    );
     return {
       Posts: posts.slice(0, realLimit),
       hasMore: posts.length === realLimitPlusOne,
@@ -85,6 +94,36 @@ export class PostResolver {
         _id: id,
       },
     });
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async vote(
+    @Arg("postId", () => Int) postId: number,
+    @Arg("value", () => Int) value: number,
+    @Ctx() ctx: MyContext,
+  ) {
+    const userId = ctx.req.session.user;
+    const isUpvote = value !== -1;
+    const realValue = isUpvote ? 1 : -1;
+    // UpVotes.insert({
+    //   userId,
+    //   postId,
+    //   value,
+    // });
+
+    await AppDataSource.getRepository(Post).query(
+      `
+    START TRANSACTION;
+    insert into up_votes ("userId", "postId", "value") values (${userId}, ${postId}, ${realValue});
+    update post 
+    set points = points + ${realValue}
+    where _id = ${postId};
+    COMMIT;
+    `,
+    );
+
+    return true;
   }
 
   @Mutation(() => Post)

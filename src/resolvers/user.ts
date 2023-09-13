@@ -36,15 +36,14 @@ class UserResponse {
 
 @Resolver(User)
 export class UserResolver {
- /// Field Level Resolver to see that if I am logged In I can see the email
-  @FieldResolver(()=>String)
-  email(@Root() user: User, @Ctx() ctx: MyContext ){
-    if(ctx.req.session.user === user._id){
-      return user.email
-    }else{
-      return ""
+  /// Field Level Resolver to see that if I am logged In I can see the email
+  @FieldResolver(() => String)
+  email(@Root() user: User, @Ctx() ctx: MyContext) {
+    if (ctx.req.session.user === user._id) {
+      return user.email;
+    } else {
+      return "";
     }
-
   }
 
   @Query(() => User, { nullable: true })

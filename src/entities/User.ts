@@ -7,6 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { Post } from "./Post";
+import { UpVotes } from "./Upvotes";
 
 @ObjectType()
 @Entity()
@@ -29,6 +30,9 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Post, (post) => post.creator)
   posts: Post[];
+
+  @OneToMany(() => UpVotes, (upVotes) => upVotes.user)
+  upVotes: UpVotes[];
 
   @Field()
   @Column({ unique: true })

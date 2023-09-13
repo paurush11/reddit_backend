@@ -9,6 +9,7 @@ import {
   DB_PORT,
 } from "./constants";
 import { Migrations1691700865366 } from "./migrations/1691700865365-migrations";
+import { UpVotes } from "./entities/Upvotes";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -19,6 +20,6 @@ export const AppDataSource = new DataSource({
   database: DB_NAME,
   synchronize: true,
   logging: true,
-  entities: [Post, User],
+  entities: [Post, User, UpVotes],
   migrations: [Migrations1691700865366],
 });
