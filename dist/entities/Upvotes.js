@@ -45,4 +45,4 @@ exports.UpVotes = UpVotes = __decorate([
     (0, type_graphql_1.ObjectType)(),
     (0, typeorm_1.Entity)()
 ], UpVotes);
-//# sourceMappingURL=Upvotes.js.map
+//# sourceMappingURL=UpVotes.js.map

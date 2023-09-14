@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { Post } from "./Post";
-import { UpVotes } from "./Upvotes";
+import { UpVotes } from "./UpVotes";
 
 @ObjectType()
 @Entity()

@@ -17,6 +17,7 @@ const type_graphql_1 = require("type-graphql");
 const Post_1 = require("../entities/Post");
 const isAuth_1 = require("../middleware/isAuth");
 const dataSource_1 = require("../dataSource");
+const UpVotes_1 = require("../entities/UpVotes");
 let PostInput = class PostInput {
 };
 __decorate([
@@ -89,14 +90,28 @@ let PostResolver = exports.PostResolver = class PostResolver {
         const userId = ctx.req.session.user;
         const isUpvote = value !== -1;
         const realValue = isUpvote ? 1 : -1;
-        await dataSource_1.AppDataSource.getRepository(Post_1.Post).query(`
-    START TRANSACTION;
-    insert into up_votes ("userId", "postId", "value") values (${userId}, ${postId}, ${realValue});
-    update post 
-    set points = points + ${realValue}
-    where _id = ${postId};
-    COMMIT;
-    `);
+        const upVote = await UpVotes_1.UpVotes.findOne({
+            where: {
+                postId: postId,
+                userId: userId,
+            },
+        });
+        if (upVote && upVote.value !== realValue) {
+            await dataSource_1.AppDataSource.transaction(async (tm) => {
+                await tm.query(`update up_votes set value = $1 where "postId" = $2 and "userId" = $3`, [realValue, postId, userId]);
+                await tm.query(` update post 
+        set points = points + ${2 * realValue}
+        where _id = ${postId};`);
+            });
+        }
+        else if (!upVote) {
+            await dataSource_1.AppDataSource.transaction(async (tm) => {
+                await tm.query(`insert into up_votes ("userId", "postId", "value") values (${userId}, ${postId}, ${realValue});`);
+                await tm.query(` update post 
+        set points = points + ${realValue}
+        where _id = ${postId};`);
+            });
+        }
         return true;
     }
     async createPost(input, ctx) {

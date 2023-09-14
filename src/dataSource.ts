@@ -9,7 +9,7 @@ import {
   DB_PORT,
 } from "./constants";
 import { Migrations1691700865366 } from "./migrations/1691700865365-migrations";
-import { UpVotes } from "./entities/Upvotes";
+import { UpVotes } from "./entities/UpVotes";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
