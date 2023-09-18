@@ -40,7 +40,7 @@ export class PostResolver {
   async posts(
     @Arg("limit") limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
-    @Ctx() ctx: MyContext
+    @Ctx() ctx: MyContext,
   ): Promise<PaginatedPosts> {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
@@ -53,7 +53,7 @@ export class PostResolver {
       replaceableValues.push(new Date(Date.parse(cursor)));
       cursorIdx = replaceableValues.length;
     }
-   
+
     const posts = await AppDataSource.getRepository(Post).query(
       `
     select p.*, 
@@ -64,10 +64,14 @@ export class PostResolver {
       'createdAt', u."createdAt",
       'updatedAt', u."updatedAt"
     ) creator,
-    ${ctx.req.session.user?'(select value from up_votes where "userId" = $2 and "postId" = p._id) "voteStatus"': 'null as "voteStatus"'}
+    ${
+      ctx.req.session.user
+        ? '(select value from up_votes where "userId" = $2 and "postId" = p._id) "voteStatus"'
+        : 'null as "voteStatus"'
+    }
     from post p
     inner join public.user u on u._id = p."creatorId"
-    ${cursor ? ` WHERE  p."createdAt" < $${cursorIdx}` :""}
+    ${cursor ? ` WHERE  p."createdAt" < $${cursorIdx}` : ""}
     order by p."createdAt" DESC
     limit $1`,
       replaceableValues,
@@ -97,12 +101,58 @@ export class PostResolver {
   }
 
   @Query(() => Post, { nullable: true })
-  post(@Arg("identifier", () => Int) id: number): Promise<Post | null> {
-    return Post.findOne({
-      where: {
-        _id: id,
-      },
-    });
+  async post(@Arg("identifier", () => Int) id: number,  @Ctx() ctx: MyContext,
+  ): Promise<Post | null> {
+    
+// return Post.findOne({
+//   where:{
+//     _id: id
+//   }, relations:["creator"]
+// })
+const postId = id; // this should be the ID of the post you want to fetch
+
+const post = await AppDataSource.getRepository(Post).query(
+  `
+    select p.*, 
+    json_build_object(
+      '_id', u._id,
+      'username', u.username,
+      'email', u.email,
+      'createdAt', u."createdAt",
+      'updatedAt', u."updatedAt"
+    ) creator,
+    ${
+      ctx.req.session.user
+        ? '(select value from up_votes where "userId" = $2 and "postId" = p._id) "voteStatus"'
+        : 'null as "voteStatus"'
+    }
+    from post p
+    inner join public.user u on u._id = p."creatorId"
+    where p._id = $1`,
+  [postId, ctx.req.session.user? ctx.req.session.user : null],
+);
+post.forEach(
+  (post: {
+    createdAt: string | number | Date;
+    updatedAt: string | number | Date;
+    creator: {
+      createdAt: string | number | Date;
+      updatedAt: string | number | Date;
+    };
+  }) => {
+    post.createdAt = new Date(post.createdAt);
+    post.updatedAt = new Date(post.updatedAt);
+
+    if (post.creator) {
+      post.creator.createdAt = new Date(post.creator.createdAt);
+      post.creator.updatedAt = new Date(post.creator.updatedAt);
+    }
+  },
+);
+return post[0]; // Since query method will return an array, just select the first element.
+
+    
+ 
   }
 
   @Mutation(() => Boolean)
@@ -127,7 +177,7 @@ export class PostResolver {
       },
     });
 
-    if (upVote && upVote.value !== realValue ) {
+    if (upVote && upVote.value !== realValue) {
       /// user aldready voted and now changing
       await AppDataSource.transaction(async (tm) => {
         await tm.query(

@@ -66,7 +66,9 @@ let PostResolver = exports.PostResolver = class PostResolver {
       'createdAt', u."createdAt",
       'updatedAt', u."updatedAt"
     ) creator,
-    ${ctx.req.session.user ? '(select value from up_votes where "userId" = $2 and "postId" = p._id) "voteStatus"' : 'null as "voteStatus"'}
+    ${ctx.req.session.user
+            ? '(select value from up_votes where "userId" = $2 and "postId" = p._id) "voteStatus"'
+            : 'null as "voteStatus"'}
     from post p
     inner join public.user u on u._id = p."creatorId"
     ${cursor ? ` WHERE  p."createdAt" < $${cursorIdx}` : ""}
@@ -85,12 +87,32 @@ let PostResolver = exports.PostResolver = class PostResolver {
             hasMore: posts.length === realLimitPlusOne,
         };
     }
-    post(id) {
-        return Post_1.Post.findOne({
-            where: {
-                _id: id,
-            },
+    async post(id, ctx) {
+        const postId = id;
+        const post = await dataSource_1.AppDataSource.getRepository(Post_1.Post).query(`
+    select p.*, 
+    json_build_object(
+      '_id', u._id,
+      'username', u.username,
+      'email', u.email,
+      'createdAt', u."createdAt",
+      'updatedAt', u."updatedAt"
+    ) creator,
+    ${ctx.req.session.user
+            ? '(select value from up_votes where "userId" = $2 and "postId" = p._id) "voteStatus"'
+            : 'null as "voteStatus"'}
+    from post p
+    inner join public.user u on u._id = p."creatorId"
+    where p._id = $1`, [postId, ctx.req.session.user ? ctx.req.session.user : null]);
+        post.forEach((post) => {
+            post.createdAt = new Date(post.createdAt);
+            post.updatedAt = new Date(post.updatedAt);
+            if (post.creator) {
+                post.creator.createdAt = new Date(post.creator.createdAt);
+                post.creator.updatedAt = new Date(post.creator.updatedAt);
+            }
         });
+        return post[0];
     }
     async vote(postId, value, ctx) {
         const userId = ctx.req.session.user;
@@ -161,8 +183,9 @@ __decorate([
 __decorate([
     (0, type_graphql_1.Query)(() => Post_1.Post, { nullable: true }),
     __param(0, (0, type_graphql_1.Arg)("identifier", () => type_graphql_1.Int)),
+    __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "post", null);
 __decorate([

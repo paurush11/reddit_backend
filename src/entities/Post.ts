@@ -28,8 +28,8 @@ export class Post extends BaseEntity {
   @OneToMany(() => UpVotes, (upVotes) => upVotes.post)
   upVotes: UpVotes[];
 
-  @Field(()=>Int, {nullable: true})
-  voteStatus: number | null
+  @Field(() => Int, { nullable: true })
+  voteStatus: number | null;
 
   @Field()
   @Column({ type: "timestamptz" })
