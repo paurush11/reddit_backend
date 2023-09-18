@@ -40,13 +40,20 @@ export class PostResolver {
   async posts(
     @Arg("limit") limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
+    @Ctx() ctx: MyContext
   ): Promise<PaginatedPosts> {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
     const replaceableValues: any = [realLimitPlusOne];
+    let cursorIdx = 3;
+    if (ctx.req.session.user) {
+      replaceableValues.push(ctx.req.session.user);
+    }
     if (cursor) {
       replaceableValues.push(new Date(Date.parse(cursor)));
+      cursorIdx = replaceableValues.length;
     }
+   
     const posts = await AppDataSource.getRepository(Post).query(
       `
     select p.*, 
@@ -56,10 +63,11 @@ export class PostResolver {
       'email', u.email,
       'createdAt', u."createdAt",
       'updatedAt', u."updatedAt"
-    ) creator
+    ) creator,
+    ${ctx.req.session.user?'(select value from up_votes where "userId" = $2 and "postId" = p._id) "voteStatus"': 'null as "voteStatus"'}
     from post p
     inner join public.user u on u._id = p."creatorId"
-    ${cursor ? `where p."createdAt"< $2` : ""}
+    ${cursor ? ` WHERE  p."createdAt" < $${cursorIdx}` :""}
     order by p."createdAt" DESC
     limit $1`,
       replaceableValues,

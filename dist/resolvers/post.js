@@ -45,12 +45,17 @@ PaginatedPosts = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], PaginatedPosts);
 let PostResolver = exports.PostResolver = class PostResolver {
-    async posts(limit, cursor) {
+    async posts(limit, cursor, ctx) {
         const realLimit = Math.min(50, limit);
         const realLimitPlusOne = realLimit + 1;
         const replaceableValues = [realLimitPlusOne];
+        let cursorIdx = 3;
+        if (ctx.req.session.user) {
+            replaceableValues.push(ctx.req.session.user);
+        }
         if (cursor) {
             replaceableValues.push(new Date(Date.parse(cursor)));
+            cursorIdx = replaceableValues.length;
         }
         const posts = await dataSource_1.AppDataSource.getRepository(Post_1.Post).query(`
     select p.*, 
@@ -60,10 +65,11 @@ let PostResolver = exports.PostResolver = class PostResolver {
       'email', u.email,
       'createdAt', u."createdAt",
       'updatedAt', u."updatedAt"
-    ) creator
+    ) creator,
+    ${ctx.req.session.user ? '(select value from up_votes where "userId" = $2 and "postId" = p._id) "voteStatus"' : 'null as "voteStatus"'}
     from post p
     inner join public.user u on u._id = p."creatorId"
-    ${cursor ? `where p."createdAt"< $2` : ""}
+    ${cursor ? ` WHERE  p."createdAt" < $${cursorIdx}` : ""}
     order by p."createdAt" DESC
     limit $1`, replaceableValues);
         posts.forEach((post) => {
@@ -147,8 +153,9 @@ __decorate([
     (0, type_graphql_1.Query)(() => PaginatedPosts),
     __param(0, (0, type_graphql_1.Arg)("limit")),
     __param(1, (0, type_graphql_1.Arg)("cursor", () => String, { nullable: true })),
+    __param(2, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "posts", null);
 __decorate([

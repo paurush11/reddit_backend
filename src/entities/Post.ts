@@ -1,4 +1,4 @@
-import { Field, ObjectType } from "type-graphql";
+import { Field, Int, ObjectType } from "type-graphql";
 import {
   BaseEntity,
   Column,
@@ -27,6 +27,9 @@ export class Post extends BaseEntity {
 
   @OneToMany(() => UpVotes, (upVotes) => upVotes.post)
   upVotes: UpVotes[];
+
+  @Field(()=>Int, {nullable: true})
+  voteStatus: number | null
 
   @Field()
   @Column({ type: "timestamptz" })
