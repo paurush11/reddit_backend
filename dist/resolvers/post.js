@@ -145,8 +145,21 @@ let PostResolver = exports.PostResolver = class PostResolver {
     async createPost(input, ctx) {
         return Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: ctx.req.session.user })).save();
     }
-    async deletePost(id) {
+    async deletePost(id, ctx) {
         try {
+            const post = await Post_1.Post.findOne({
+                where: {
+                    _id: id,
+                },
+            });
+            if (!post) {
+                return false;
+            }
+            if (post.creatorId !== ctx.req.session.user)
+                throw Error("Unauthorized User!!");
+            await UpVotes_1.UpVotes.delete({
+                postId: id,
+            });
             await Post_1.Post.delete({
                 _id: id,
             });
@@ -209,9 +222,11 @@ __decorate([
 ], PostResolver.prototype, "createPost", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => Boolean, { nullable: true }),
-    __param(0, (0, type_graphql_1.Arg)("Identifier")),
+    (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
+    __param(0, (0, type_graphql_1.Arg)("id", () => type_graphql_1.Int)),
+    __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "deletePost", null);
 __decorate([

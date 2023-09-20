@@ -101,18 +101,19 @@ export class PostResolver {
   }
 
   @Query(() => Post, { nullable: true })
-  async post(@Arg("identifier", () => Int) id: number,  @Ctx() ctx: MyContext,
+  async post(
+    @Arg("identifier", () => Int) id: number,
+    @Ctx() ctx: MyContext,
   ): Promise<Post | null> {
-    
-// return Post.findOne({
-//   where:{
-//     _id: id
-//   }, relations:["creator"]
-// })
-const postId = id; // this should be the ID of the post you want to fetch
+    // return Post.findOne({
+    //   where:{
+    //     _id: id
+    //   }, relations:["creator"]
+    // })
+    const postId = id; // this should be the ID of the post you want to fetch
 
-const post = await AppDataSource.getRepository(Post).query(
-  `
+    const post = await AppDataSource.getRepository(Post).query(
+      `
     select p.*, 
     json_build_object(
       '_id', u._id,
@@ -129,30 +130,27 @@ const post = await AppDataSource.getRepository(Post).query(
     from post p
     inner join public.user u on u._id = p."creatorId"
     where p._id = $1`,
-  [postId, ctx.req.session.user? ctx.req.session.user : null],
-);
-post.forEach(
-  (post: {
-    createdAt: string | number | Date;
-    updatedAt: string | number | Date;
-    creator: {
-      createdAt: string | number | Date;
-      updatedAt: string | number | Date;
-    };
-  }) => {
-    post.createdAt = new Date(post.createdAt);
-    post.updatedAt = new Date(post.updatedAt);
+      [postId, ctx.req.session.user ? ctx.req.session.user : null],
+    );
+    post.forEach(
+      (post: {
+        createdAt: string | number | Date;
+        updatedAt: string | number | Date;
+        creator: {
+          createdAt: string | number | Date;
+          updatedAt: string | number | Date;
+        };
+      }) => {
+        post.createdAt = new Date(post.createdAt);
+        post.updatedAt = new Date(post.updatedAt);
 
-    if (post.creator) {
-      post.creator.createdAt = new Date(post.creator.createdAt);
-      post.creator.updatedAt = new Date(post.creator.updatedAt);
-    }
-  },
-);
-return post[0]; // Since query method will return an array, just select the first element.
-
-    
- 
+        if (post.creator) {
+          post.creator.createdAt = new Date(post.creator.createdAt);
+          post.creator.updatedAt = new Date(post.creator.updatedAt);
+        }
+      },
+    );
+    return post[0]; // Since query method will return an array, just select the first element.
   }
 
   @Mutation(() => Boolean)
@@ -216,15 +214,33 @@ return post[0]; // Since query method will return an array, just select the firs
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  async deletePost(@Arg("Identifier") id: number): Promise<Boolean> {
+  @UseMiddleware(isAuth)
+  async deletePost(
+    @Arg("id", () => Int) id: number,
+    @Ctx() ctx: MyContext,
+  ): Promise<Boolean> {
     try {
+      const post = await Post.findOne({
+        where: {
+          _id: id,
+        },
+      });
+      if (!post) {
+        return false;
+      }
+      if (post.creatorId !== ctx.req.session.user)
+        throw Error("Unauthorized User!!");
+
+      await UpVotes.delete({
+        postId: id,
+      });
       await Post.delete({
         _id: id,
       });
     } catch (error) {
       return false;
     }
-
+    // return await Post.delete({_id: id, creatorId: ctx.req.session.user})
     return true;
   }
   @Mutation(() => Post, { nullable: true })

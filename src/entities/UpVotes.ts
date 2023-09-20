@@ -23,6 +23,8 @@ export class UpVotes extends BaseEntity {
   postId: number;
 
   @Field(() => Post)
-  @ManyToOne(() => User, (post) => post.upVotes)
+  @ManyToOne(() => User, (post) => post.upVotes, {
+    onDelete: "CASCADE"
+  })
   post: Post;
 }
