@@ -2,12 +2,14 @@ import {
   Arg,
   Ctx,
   Field,
+  FieldResolver,
   InputType,
   Int,
   Mutation,
   ObjectType,
   Query,
   Resolver,
+  Root,
   UseMiddleware,
 } from "type-graphql";
 import { Post } from "../entities/Post";
@@ -15,6 +17,7 @@ import { MyContext } from "src/types";
 import { isAuth } from "../middleware/isAuth";
 import { AppDataSource } from "../dataSource";
 import { UpVotes } from "../entities/UpVotes";
+import { User } from "../entities/User";
 
 @InputType()
 class PostInput {
@@ -34,8 +37,17 @@ class PaginatedPosts {
   hasMore: boolean;
 }
 
-@Resolver()
+@Resolver(()=>Post)
 export class PostResolver {
+  @FieldResolver(() => User)
+  creator(@Root() post: Post, @Ctx() ctx: MyContext): Promise<User | null> {
+    // return User.findOne({
+    //   where: {
+    //     _id: post.creatorId,
+    //   },
+    // });
+    return ctx.userLoader.load(post.creatorId)
+  }
   @Query(() => PaginatedPosts)
   async posts(
     @Arg("limit") limit: number,
@@ -57,20 +69,14 @@ export class PostResolver {
     const posts = await AppDataSource.getRepository(Post).query(
       `
     select p.*, 
-    json_build_object(
-      '_id', u._id,
-      'username', u.username,
-      'email', u.email,
-      'createdAt', u."createdAt",
-      'updatedAt', u."updatedAt"
-    ) creator,
+    
     ${
       ctx.req.session.user
         ? '(select value from up_votes where "userId" = $2 and "postId" = p._id) "voteStatus"'
         : 'null as "voteStatus"'
     }
     from post p
-    inner join public.user u on u._id = p."creatorId"
+   
     ${cursor ? ` WHERE  p."createdAt" < $${cursorIdx}` : ""}
     order by p."createdAt" DESC
     limit $1`,
@@ -115,20 +121,14 @@ export class PostResolver {
     const post = await AppDataSource.getRepository(Post).query(
       `
     select p.*, 
-    json_build_object(
-      '_id', u._id,
-      'username', u.username,
-      'email', u.email,
-      'createdAt', u."createdAt",
-      'updatedAt', u."updatedAt"
-    ) creator,
+   
     ${
       ctx.req.session.user
         ? '(select value from up_votes where "userId" = $2 and "postId" = p._id) "voteStatus"'
         : 'null as "voteStatus"'
     }
     from post p
-    inner join public.user u on u._id = p."creatorId"
+  
     where p._id = $1`,
       [postId, ctx.req.session.user ? ctx.req.session.user : null],
     );
@@ -244,21 +244,24 @@ export class PostResolver {
     return true;
   }
   @Mutation(() => Post, { nullable: true })
+  @UseMiddleware(isAuth)
   async updatePost(
+    @Arg("id", () => Int) id: number,
     @Arg("Title", () => String, { nullable: true }) title: string,
-    @Arg("Identifier") id: number,
+    @Arg("Text", () => String, { nullable: true }) text: string,
+    @Ctx() ctx: MyContext,
   ): Promise<Post | null> {
-    const post = await Post.findOne({
-      where: {
-        _id: id,
-      },
-    });
-    if (!post) {
-      return null;
-    }
-    if (typeof title !== "undefined") {
-      await Post.update({ _id: id }, { title });
-    }
-    return post;
+    const result = AppDataSource.getRepository(Post)
+      .createQueryBuilder()
+      .update(Post)
+      .set({ title, text })
+      .where(`_id = :id and "creatorId"= :creatorId`, {
+        id,
+        creatorId: ctx.req.session.user,
+      })
+      .returning("*")
+      .execute();
+    console.log(result);
+    return (await result).raw[0];
   }
 }

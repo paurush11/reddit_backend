@@ -39,7 +39,7 @@ __decorate([
 __decorate([
     (0, type_graphql_1.Field)(() => Post_1.Post),
     (0, typeorm_1.ManyToOne)(() => User_1.User, (post) => post.upVotes, {
-        onDelete: "CASCADE"
+        onDelete: "CASCADE",
     }),
     __metadata("design:type", Post_1.Post)
 ], UpVotes.prototype, "post", void 0);

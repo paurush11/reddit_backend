@@ -11,6 +11,7 @@ import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 import { MyContext } from "./types";
+import { createUserLoader } from "./utils/createUserLoader";
 
 const main = async () => {
   AppDataSource.initialize()
@@ -63,6 +64,7 @@ const main = async () => {
       req,
       res,
       redis,
+      userLoader: createUserLoader()
     }),
 
     schema: await buildSchema({
