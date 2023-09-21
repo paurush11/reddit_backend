@@ -82,7 +82,7 @@ let PostResolver = exports.PostResolver = class PostResolver {
             hasMore: posts.length === realLimitPlusOne,
         };
     }
-    async post(id, ctx) {
+    async post(id) {
         const postId = id;
         const post = await dataSource_1.AppDataSource.getRepository(Post_1.Post).query(`
     select p.* 
@@ -195,9 +195,8 @@ __decorate([
 __decorate([
     (0, type_graphql_1.Query)(() => Post_1.Post, { nullable: true }),
     __param(0, (0, type_graphql_1.Arg)("identifier", () => type_graphql_1.Int)),
-    __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "post", null);
 __decorate([
