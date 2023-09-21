@@ -37,7 +37,7 @@ class PaginatedPosts {
   hasMore: boolean;
 }
 
-@Resolver(()=>Post)
+@Resolver(() => Post)
 export class PostResolver {
   @FieldResolver(() => User)
   creator(@Root() post: Post, @Ctx() ctx: MyContext): Promise<User | null> {
@@ -46,8 +46,26 @@ export class PostResolver {
     //     _id: post.creatorId,
     //   },
     // });
-    return ctx.userLoader.load(post.creatorId)
+    return ctx.userLoader.load(post.creatorId);
   }
+  @FieldResolver(() => Int, { nullable: true })
+  async voteStatus(
+    @Root() post: Post,
+    @Ctx() ctx: MyContext,
+  ): Promise<number | null> {
+    // return User.findOne({
+    //   where: {
+    //     _id: post.creatorId,
+    //   },
+    // });
+    const up_vote = await ctx.upVotesLoader.load({
+      userId: ctx.req.session.user as number,
+      postId: post._id,
+    });
+
+    return up_vote.value;
+  }
+
   @Query(() => PaginatedPosts)
   async posts(
     @Arg("limit") limit: number,
@@ -57,27 +75,14 @@ export class PostResolver {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
     const replaceableValues: any = [realLimitPlusOne];
-    let cursorIdx = 3;
-    if (ctx.req.session.user) {
-      replaceableValues.push(ctx.req.session.user);
-    }
     if (cursor) {
       replaceableValues.push(new Date(Date.parse(cursor)));
-      cursorIdx = replaceableValues.length;
     }
-
     const posts = await AppDataSource.getRepository(Post).query(
-      `
-    select p.*, 
-    
-    ${
-      ctx.req.session.user
-        ? '(select value from up_votes where "userId" = $2 and "postId" = p._id) "voteStatus"'
-        : 'null as "voteStatus"'
-    }
+     `
+    select p.*
     from post p
-   
-    ${cursor ? ` WHERE  p."createdAt" < $${cursorIdx}` : ""}
+    ${cursor ? ` WHERE  p."createdAt" < $2` : ""}
     order by p."createdAt" DESC
     limit $1`,
       replaceableValues,
@@ -122,11 +127,6 @@ export class PostResolver {
       `
     select p.*, 
    
-    ${
-      ctx.req.session.user
-        ? '(select value from up_votes where "userId" = $2 and "postId" = p._id) "voteStatus"'
-        : 'null as "voteStatus"'
-    }
     from post p
   
     where p._id = $1`,

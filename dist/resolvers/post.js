@@ -49,27 +49,24 @@ let PostResolver = exports.PostResolver = class PostResolver {
     creator(post, ctx) {
         return ctx.userLoader.load(post.creatorId);
     }
+    async voteStatus(post, ctx) {
+        const up_vote = await ctx.upVotesLoader.load({
+            userId: ctx.req.session.user,
+            postId: post._id,
+        });
+        return up_vote.value;
+    }
     async posts(limit, cursor, ctx) {
         const realLimit = Math.min(50, limit);
         const realLimitPlusOne = realLimit + 1;
         const replaceableValues = [realLimitPlusOne];
-        let cursorIdx = 3;
-        if (ctx.req.session.user) {
-            replaceableValues.push(ctx.req.session.user);
-        }
         if (cursor) {
             replaceableValues.push(new Date(Date.parse(cursor)));
-            cursorIdx = replaceableValues.length;
         }
         const posts = await dataSource_1.AppDataSource.getRepository(Post_1.Post).query(`
-    select p.*, 
-    
-    ${ctx.req.session.user
-            ? '(select value from up_votes where "userId" = $2 and "postId" = p._id) "voteStatus"'
-            : 'null as "voteStatus"'}
+    select p.*
     from post p
-   
-    ${cursor ? ` WHERE  p."createdAt" < $${cursorIdx}` : ""}
+    ${cursor ? ` WHERE  p."createdAt" < $2` : ""}
     order by p."createdAt" DESC
     limit $1`, replaceableValues);
         posts.forEach((post) => {
@@ -90,9 +87,6 @@ let PostResolver = exports.PostResolver = class PostResolver {
         const post = await dataSource_1.AppDataSource.getRepository(Post_1.Post).query(`
     select p.*, 
    
-    ${ctx.req.session.user
-            ? '(select value from up_votes where "userId" = $2 and "postId" = p._id) "voteStatus"'
-            : 'null as "voteStatus"'}
     from post p
   
     where p._id = $1`, [postId, ctx.req.session.user ? ctx.req.session.user : null]);
@@ -184,6 +178,14 @@ __decorate([
     __metadata("design:paramtypes", [Post_1.Post, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "creator", null);
+__decorate([
+    (0, type_graphql_1.FieldResolver)(() => type_graphql_1.Int, { nullable: true }),
+    __param(0, (0, type_graphql_1.Root)()),
+    __param(1, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Post_1.Post, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "voteStatus", null);
 __decorate([
     (0, type_graphql_1.Query)(() => PaginatedPosts),
     __param(0, (0, type_graphql_1.Arg)("limit")),

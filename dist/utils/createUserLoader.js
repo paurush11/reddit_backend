@@ -9,7 +9,7 @@ const User_1 = require("../entities/User");
 const createUserLoader = () => new dataloader_1.default(async (userIds) => {
     const users = await User_1.User.findByIds(userIds);
     const userIdToUse = {};
-    users.forEach(u => {
+    users.forEach((u) => {
         userIdToUse[u._id] = u;
     });
     return userIds.map((userId) => userIdToUse[userId]);

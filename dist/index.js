@@ -16,6 +16,7 @@ const hello_1 = require("./resolvers/hello");
 const post_1 = require("./resolvers/post");
 const user_1 = require("./resolvers/user");
 const createUserLoader_1 = require("./utils/createUserLoader");
+const createUpvotesLoader_1 = require("./utils/createUpvotesLoader");
 const main = async () => {
     dataSource_1.AppDataSource.initialize()
         .then(() => {
@@ -56,7 +57,8 @@ const main = async () => {
             req,
             res,
             redis,
-            userLoader: (0, createUserLoader_1.createUserLoader)()
+            userLoader: (0, createUserLoader_1.createUserLoader)(),
+            upVotesLoader: (0, createUpvotesLoader_1.createUpVotesLoader)(),
         }),
         schema: await (0, type_graphql_1.buildSchema)({
             validate: false,
