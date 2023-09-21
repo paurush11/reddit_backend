@@ -1,4 +1,4 @@
-import { MyContext } from "src/types";
+import { MyContext } from "../types";
 import {
   Arg,
   Ctx,
@@ -70,7 +70,6 @@ export class PostResolver {
   async posts(
     @Arg("limit") limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
-    
   ): Promise<PaginatedPosts> {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
@@ -79,7 +78,7 @@ export class PostResolver {
       replaceableValues.push(new Date(Date.parse(cursor)));
     }
     const posts = await AppDataSource.getRepository(Post).query(
-     `
+      `
     select p.*
     from post p
     ${cursor ? ` WHERE  p."createdAt" < $2` : ""}
@@ -125,12 +124,10 @@ export class PostResolver {
 
     const post = await AppDataSource.getRepository(Post).query(
       `
-    select p.*, 
-   
+    select p.* 
     from post p
-  
     where p._id = $1`,
-      [postId, ctx.req.session.user ? ctx.req.session.user : null],
+      [postId],
     );
     post.forEach(
       (post: {

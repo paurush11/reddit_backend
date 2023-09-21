@@ -85,11 +85,9 @@ let PostResolver = exports.PostResolver = class PostResolver {
     async post(id, ctx) {
         const postId = id;
         const post = await dataSource_1.AppDataSource.getRepository(Post_1.Post).query(`
-    select p.*, 
-   
+    select p.* 
     from post p
-  
-    where p._id = $1`, [postId, ctx.req.session.user ? ctx.req.session.user : null]);
+    where p._id = $1`, [postId]);
         post.forEach((post) => {
             post.createdAt = new Date(post.createdAt);
             post.updatedAt = new Date(post.updatedAt);
