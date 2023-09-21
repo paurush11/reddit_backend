@@ -14,11 +14,11 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostResolver = void 0;
 const type_graphql_1 = require("type-graphql");
-const Post_1 = require("../entities/Post");
-const isAuth_1 = require("../middleware/isAuth");
 const dataSource_1 = require("../dataSource");
+const Post_1 = require("../entities/Post");
 const UpVotes_1 = require("../entities/UpVotes");
 const User_1 = require("../entities/User");
+const isAuth_1 = require("../middleware/isAuth");
 let PostInput = class PostInput {
 };
 __decorate([
@@ -56,7 +56,7 @@ let PostResolver = exports.PostResolver = class PostResolver {
         });
         return up_vote.value;
     }
-    async posts(limit, cursor, ctx) {
+    async posts(limit, cursor) {
         const realLimit = Math.min(50, limit);
         const realLimitPlusOne = realLimit + 1;
         const replaceableValues = [realLimitPlusOne];
@@ -190,9 +190,8 @@ __decorate([
     (0, type_graphql_1.Query)(() => PaginatedPosts),
     __param(0, (0, type_graphql_1.Arg)("limit")),
     __param(1, (0, type_graphql_1.Arg)("cursor", () => String, { nullable: true })),
-    __param(2, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "posts", null);
 __decorate([
