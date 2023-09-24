@@ -226,10 +226,10 @@ let UserResolver = exports.UserResolver = class UserResolver {
     users() {
         return User_1.User.find({});
     }
-    async delete(options) {
+    async delete(username) {
         try {
             await User_1.User.delete({
-                username: options,
+                username: username,
             });
         }
         catch (error) {
@@ -302,7 +302,7 @@ __decorate([
 ], UserResolver.prototype, "users", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => Boolean, { nullable: true }),
-    __param(0, (0, type_graphql_1.Arg)("options")),
+    __param(0, (0, type_graphql_1.Arg)("username")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)

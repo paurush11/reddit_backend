@@ -238,10 +238,10 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean, { nullable: true })
-  async delete(@Arg("options") options: string): Promise<Boolean> {
+  async delete(@Arg("username") username: string): Promise<Boolean> {
     try {
       await User.delete({
-        username: options,
+        username: username,
       });
     } catch (error) {
       return false;
