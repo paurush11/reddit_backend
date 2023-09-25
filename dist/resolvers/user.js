@@ -134,6 +134,8 @@ let UserResolver = exports.UserResolver = class UserResolver {
                 ],
             };
         }
+        console.log(newPassword);
+        console.log(token);
         const key = constants_1.FORGOT_PASSWORD + token;
         const userId = (await ctx.redis.get(key));
         const user = await User_1.User.findOne({
@@ -171,6 +173,8 @@ let UserResolver = exports.UserResolver = class UserResolver {
             console.log("wrong");
             return true;
         }
+        console.log(UserNameOrEmail);
+        console.log(user.password);
         const token = crypto.randomUUID();
         await ctx.redis.set(constants_1.FORGOT_PASSWORD + token, user._id, "EX", 1000 * 60 * 60 * 24 * 3);
         console.log(`http://localhost:3000/change-password/${token}`);

@@ -46,6 +46,7 @@ export class PostResolver {
     //     _id: post.creatorId,
     //   },
     // });
+    console.log(post.creatorId)
     return ctx.userLoader.load(post.creatorId);
   }
   @FieldResolver(() => Int, { nullable: true })
@@ -64,6 +65,56 @@ export class PostResolver {
     });
 
     return up_vote.value;
+  }
+
+  @Query(() => PaginatedPosts)
+  async myPosts(
+    @Arg("limit") limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
+    @Ctx() ctx: MyContext,
+  ) {
+    const userId = ctx.req.session.user;
+    const realLimit = Math.min(50, limit);
+    const realLimitPlusOne = realLimit + 1;
+    const replaceableValues: any = [realLimitPlusOne, userId];
+    if (cursor) {
+      replaceableValues.push(new Date(Date.parse(cursor)));
+    }
+    const posts = await AppDataSource.getRepository(Post).query(
+      `
+    select p.*
+    from post p
+    ${
+      cursor
+        ? ` WHERE  p."createdAt" < $3 and p."creatorId" = $2`
+        : ` WHERE p."creatorId" = $2`
+    }
+    order by p."createdAt" DESC
+    limit $1`,
+      replaceableValues,
+    );
+    posts.forEach(
+      (post: {
+        createdAt: string | number | Date;
+        updatedAt: string | number | Date;
+        creator: {
+          createdAt: string | number | Date;
+          updatedAt: string | number | Date;
+        };
+      }) => {
+        post.createdAt = new Date(post.createdAt);
+        post.updatedAt = new Date(post.updatedAt);
+
+        if (post.creator) {
+          post.creator.createdAt = new Date(post.creator.createdAt);
+          post.creator.updatedAt = new Date(post.creator.updatedAt);
+        }
+      },
+    );
+    return {
+      Posts: posts.slice(0, realLimit),
+      hasMore: posts.length === realLimitPlusOne,
+    };
   }
 
   @Query(() => PaginatedPosts)
@@ -104,6 +155,7 @@ export class PostResolver {
         }
       },
     );
+    
     return {
       Posts: posts.slice(0, realLimit),
       hasMore: posts.length === realLimitPlusOne,

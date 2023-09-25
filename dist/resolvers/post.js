@@ -47,6 +47,7 @@ PaginatedPosts = __decorate([
 ], PaginatedPosts);
 let PostResolver = exports.PostResolver = class PostResolver {
     creator(post, ctx) {
+        console.log(post.creatorId);
         return ctx.userLoader.load(post.creatorId);
     }
     async voteStatus(post, ctx) {
@@ -55,6 +56,35 @@ let PostResolver = exports.PostResolver = class PostResolver {
             postId: post._id,
         });
         return up_vote.value;
+    }
+    async myPosts(limit, cursor, ctx) {
+        const userId = ctx.req.session.user;
+        const realLimit = Math.min(50, limit);
+        const realLimitPlusOne = realLimit + 1;
+        const replaceableValues = [realLimitPlusOne, userId];
+        if (cursor) {
+            replaceableValues.push(new Date(Date.parse(cursor)));
+        }
+        const posts = await dataSource_1.AppDataSource.getRepository(Post_1.Post).query(`
+    select p.*
+    from post p
+    ${cursor
+            ? ` WHERE  p."createdAt" < $3 and p."creatorId" = $2`
+            : ` WHERE p."creatorId" = $2`}
+    order by p."createdAt" DESC
+    limit $1`, replaceableValues);
+        posts.forEach((post) => {
+            post.createdAt = new Date(post.createdAt);
+            post.updatedAt = new Date(post.updatedAt);
+            if (post.creator) {
+                post.creator.createdAt = new Date(post.creator.createdAt);
+                post.creator.updatedAt = new Date(post.creator.updatedAt);
+            }
+        });
+        return {
+            Posts: posts.slice(0, realLimit),
+            hasMore: posts.length === realLimitPlusOne,
+        };
     }
     async posts(limit, cursor) {
         const realLimit = Math.min(50, limit);
@@ -184,6 +214,15 @@ __decorate([
     __metadata("design:paramtypes", [Post_1.Post, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "voteStatus", null);
+__decorate([
+    (0, type_graphql_1.Query)(() => PaginatedPosts),
+    __param(0, (0, type_graphql_1.Arg)("limit")),
+    __param(1, (0, type_graphql_1.Arg)("cursor", () => String, { nullable: true })),
+    __param(2, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "myPosts", null);
 __decorate([
     (0, type_graphql_1.Query)(() => PaginatedPosts),
     __param(0, (0, type_graphql_1.Arg)("limit")),

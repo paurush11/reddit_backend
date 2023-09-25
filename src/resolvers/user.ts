@@ -111,6 +111,8 @@ export class UserResolver {
         ],
       };
     }
+    console.log(newPassword)
+    console.log(token)
     const key = FORGOT_PASSWORD + token;
     const userId = (await ctx.redis.get(key)) as string;
     const user = await User.findOne({
@@ -157,6 +159,8 @@ export class UserResolver {
       console.log("wrong");
       return true;
     }
+    console.log(UserNameOrEmail)
+    console.log(user.password)
     const token = crypto.randomUUID();
     await ctx.redis.set(
       FORGOT_PASSWORD + token,
@@ -239,6 +243,7 @@ export class UserResolver {
 
   @Mutation(() => Boolean, { nullable: true })
   async delete(@Arg("username") username: string): Promise<Boolean> {
+    
     try {
       await User.delete({
         username: username,
