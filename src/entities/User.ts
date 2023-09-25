@@ -31,7 +31,11 @@ export class User extends BaseEntity {
   @OneToMany(() => Post, (post) => post.creator)
   posts: Post[];
 
-  @OneToMany(() => UpVotes, (upVotes) => upVotes.user)
+  @Field(() => [UpVotes], { nullable: true })
+  @OneToMany(() => UpVotes, (upVotes) => upVotes.user, {
+    cascade: true,
+    eager: true,
+  })
   upVotes: UpVotes[];
 
   @Field()

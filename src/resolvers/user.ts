@@ -17,6 +17,8 @@ import { UserNameOrEmailPassword } from "../utils/UserNameOrEmailPassword";
 import { validate } from "../utils/validate";
 import { sendEmail } from "../utils/sendEmail";
 import * as crypto from "crypto";
+import { Post } from "../entities/Post";
+import { createPostLoader } from "../utils/createPostLoader";
 
 @ObjectType()
 class FieldError {
@@ -58,6 +60,32 @@ export class UserResolver {
       },
     });
     return user;
+  }
+  @Query(() => [Post], { nullable: true })
+  async MyVotedPosts(@Ctx() ctx: MyContext) {
+    ///user not logged in
+    if (!ctx.req.session.user) {
+      return null;
+    }
+    const user = await User.findOne({
+      where: {
+        _id: ctx.req.session.user,
+      },
+    });
+
+    if (!user || !user.upVotes) {
+      return null;
+    }
+
+    const postIds = user.upVotes.map((upvote) => upvote.postId);
+    console.log(postIds);
+    const postLoader = createPostLoader();
+    let postPromise = await postIds.map((id) => {
+      return postLoader.load(id);
+    });
+
+    let posts = await Promise.all(postPromise);
+    return posts;
   }
 
   @Mutation(() => UserResponse, { nullable: false })
@@ -111,8 +139,8 @@ export class UserResolver {
         ],
       };
     }
-    console.log(newPassword)
-    console.log(token)
+    console.log(newPassword);
+    console.log(token);
     const key = FORGOT_PASSWORD + token;
     const userId = (await ctx.redis.get(key)) as string;
     const user = await User.findOne({
@@ -159,8 +187,8 @@ export class UserResolver {
       console.log("wrong");
       return true;
     }
-    console.log(UserNameOrEmail)
-    console.log(user.password)
+    console.log(UserNameOrEmail);
+    console.log(user.password);
     const token = crypto.randomUUID();
     await ctx.redis.set(
       FORGOT_PASSWORD + token,
@@ -243,7 +271,6 @@ export class UserResolver {
 
   @Mutation(() => Boolean, { nullable: true })
   async delete(@Arg("username") username: string): Promise<Boolean> {
-    
     try {
       await User.delete({
         username: username,

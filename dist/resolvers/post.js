@@ -47,7 +47,6 @@ PaginatedPosts = __decorate([
 ], PaginatedPosts);
 let PostResolver = exports.PostResolver = class PostResolver {
     creator(post, ctx) {
-        console.log(post.creatorId);
         return ctx.userLoader.load(post.creatorId);
     }
     async voteStatus(post, ctx) {
@@ -57,6 +56,7 @@ let PostResolver = exports.PostResolver = class PostResolver {
         });
         return up_vote.value;
     }
+    async myUpVotes(ctx) { }
     async myPosts(limit, cursor, ctx) {
         const userId = ctx.req.session.user;
         const realLimit = Math.min(50, limit);
@@ -138,6 +138,11 @@ let PostResolver = exports.PostResolver = class PostResolver {
                 userId: userId,
             },
         });
+        const user = await User_1.User.findOne({
+            where: {
+                _id: userId,
+            },
+        });
         if (upVote && upVote.value !== realValue) {
             await dataSource_1.AppDataSource.transaction(async (tm) => {
                 await tm.query(`update up_votes set value = $1 where "postId" = $2 and "userId" = $3`, [realValue, postId, userId]);
@@ -153,6 +158,20 @@ let PostResolver = exports.PostResolver = class PostResolver {
         set points = points + ${realValue}
         where _id = ${postId};`);
             });
+            if (user) {
+                const newUpVote = await UpVotes_1.UpVotes.findOne({
+                    where: {
+                        userId: userId,
+                        postId: postId,
+                    },
+                });
+                if (newUpVote) {
+                    if (!user.upVotes)
+                        user.upVotes = [];
+                    user.upVotes.push(newUpVote);
+                    await User_1.User.save(user);
+                }
+            }
         }
         return true;
     }
@@ -214,6 +233,13 @@ __decorate([
     __metadata("design:paramtypes", [Post_1.Post, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "voteStatus", null);
+__decorate([
+    (0, type_graphql_1.Query)(() => UpVotes_1.UpVotes),
+    __param(0, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "myUpVotes", null);
 __decorate([
     (0, type_graphql_1.Query)(() => PaginatedPosts),
     __param(0, (0, type_graphql_1.Arg)("limit")),

@@ -47,6 +47,8 @@ const UserNameOrEmailPassword_1 = require("../utils/UserNameOrEmailPassword");
 const validate_1 = require("../utils/validate");
 const sendEmail_1 = require("../utils/sendEmail");
 const crypto = __importStar(require("crypto"));
+const Post_1 = require("../entities/Post");
+const createPostLoader_1 = require("../utils/createPostLoader");
 let FieldError = class FieldError {
 };
 __decorate([
@@ -92,6 +94,27 @@ let UserResolver = exports.UserResolver = class UserResolver {
             },
         });
         return user;
+    }
+    async MyVotedPosts(ctx) {
+        if (!ctx.req.session.user) {
+            return null;
+        }
+        const user = await User_1.User.findOne({
+            where: {
+                _id: ctx.req.session.user,
+            },
+        });
+        if (!user || !user.upVotes) {
+            return null;
+        }
+        const postIds = user.upVotes.map((upvote) => upvote.postId);
+        console.log(postIds);
+        const postLoader = (0, createPostLoader_1.createPostLoader)();
+        let postPromise = await postIds.map((id) => {
+            return postLoader.load(id);
+        });
+        let posts = await Promise.all(postPromise);
+        return posts;
     }
     async register(ctx, options) {
         const hashedPassword = await argon2_1.default.hash(options.password);
@@ -257,6 +280,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "Me", null);
+__decorate([
+    (0, type_graphql_1.Query)(() => [Post_1.Post], { nullable: true }),
+    __param(0, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "MyVotedPosts", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => UserResponse, { nullable: false }),
     __param(0, (0, type_graphql_1.Ctx)()),

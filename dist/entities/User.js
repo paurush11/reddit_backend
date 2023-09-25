@@ -46,7 +46,11 @@ __decorate([
     __metadata("design:type", Array)
 ], User.prototype, "posts", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => UpVotes_1.UpVotes, (upVotes) => upVotes.user),
+    (0, type_graphql_1.Field)(() => [UpVotes_1.UpVotes], { nullable: true }),
+    (0, typeorm_1.OneToMany)(() => UpVotes_1.UpVotes, (upVotes) => upVotes.user, {
+        cascade: true,
+        eager: true,
+    }),
     __metadata("design:type", Array)
 ], User.prototype, "upVotes", void 0);
 __decorate([

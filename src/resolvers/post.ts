@@ -18,6 +18,7 @@ import { Post } from "../entities/Post";
 import { UpVotes } from "../entities/UpVotes";
 import { User } from "../entities/User";
 import { isAuth } from "../middleware/isAuth";
+import { SaveOptions, RemoveOptions } from "typeorm";
 
 @InputType()
 class PostInput {
@@ -46,7 +47,6 @@ export class PostResolver {
     //     _id: post.creatorId,
     //   },
     // });
-    console.log(post.creatorId)
     return ctx.userLoader.load(post.creatorId);
   }
   @FieldResolver(() => Int, { nullable: true })
@@ -66,6 +66,8 @@ export class PostResolver {
 
     return up_vote.value;
   }
+  @Query(() => UpVotes)
+  async myUpVotes(@Ctx() ctx: MyContext) {}
 
   @Query(() => PaginatedPosts)
   async myPosts(
@@ -155,7 +157,7 @@ export class PostResolver {
         }
       },
     );
-    
+
     return {
       Posts: posts.slice(0, realLimit),
       hasMore: posts.length === realLimitPlusOne,
@@ -221,6 +223,12 @@ export class PostResolver {
       },
     });
 
+    const user = await User.findOne({
+      where: {
+        _id: userId,
+      },
+    });
+
     if (upVote && upVote.value !== realValue) {
       /// user aldready voted and now changing
       await AppDataSource.transaction(async (tm) => {
@@ -228,6 +236,7 @@ export class PostResolver {
           `update up_votes set value = $1 where "postId" = $2 and "userId" = $3`,
           [realValue, postId, userId],
         );
+
         await tm.query(` update post 
         set points = points + ${2 * realValue}
         where _id = ${postId};`);
@@ -238,10 +247,26 @@ export class PostResolver {
         await tm.query(
           `insert into up_votes ("userId", "postId", "value") values (${userId}, ${postId}, ${realValue});`,
         );
+
         await tm.query(` update post 
         set points = points + ${realValue}
         where _id = ${postId};`);
       });
+
+      if (user) {
+        const newUpVote = await UpVotes.findOne({
+          where: {
+            userId: userId,
+            postId: postId,
+          },
+        });
+        if (newUpVote) {
+          if (!user.upVotes) user.upVotes = [];
+
+          user.upVotes.push(newUpVote);
+          await User.save(user);
+        }
+      }
     }
 
     return true;
