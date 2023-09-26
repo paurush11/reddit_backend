@@ -10,7 +10,7 @@ import {
   UseMiddleware,
 } from "type-graphql";
 import { isAuth } from "../middleware/isAuth";
-import { Any } from "typeorm";
+
 import testSavedPost from "../utils/sampleSavedPost";
 
 @Resolver()

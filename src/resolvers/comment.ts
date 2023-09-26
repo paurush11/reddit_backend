@@ -29,7 +29,7 @@ export class CommentResolver {
   @FieldResolver(() => Post)
   async post(
     @Root() comments: PostComments,
-    @Ctx() ctx: MyContext,
+
   ): Promise<Post | null> {
     const postLoader = createPostLoader();
     let post = await postLoader.load(comments.postId);

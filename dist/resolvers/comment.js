@@ -24,7 +24,7 @@ let CommentResolver = exports.CommentResolver = class CommentResolver {
         console.log(comments);
         return ctx.userLoader.load(comments.creatorId);
     }
-    async post(comments, ctx) {
+    async post(comments) {
         const postLoader = (0, createPostLoader_1.createPostLoader)();
         let post = await postLoader.load(comments.postId);
         return post;
@@ -72,9 +72,8 @@ __decorate([
 __decorate([
     (0, type_graphql_1.FieldResolver)(() => Post_1.Post),
     __param(0, (0, type_graphql_1.Root)()),
-    __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Comments_1.PostComments, Object]),
+    __metadata("design:paramtypes", [Comments_1.PostComments]),
     __metadata("design:returntype", Promise)
 ], CommentResolver.prototype, "post", null);
 __decorate([
