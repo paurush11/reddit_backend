@@ -19,6 +19,7 @@ const createUserLoader_1 = require("./utils/createUserLoader");
 const createUpvotesLoader_1 = require("./utils/createUpvotesLoader");
 const comment_1 = require("./resolvers/comment");
 const upvote_1 = require("./resolvers/upvote");
+const savePost_1 = require("./resolvers/savePost");
 const main = async () => {
     dataSource_1.AppDataSource.initialize()
         .then(() => {
@@ -64,7 +65,14 @@ const main = async () => {
         }),
         schema: await (0, type_graphql_1.buildSchema)({
             validate: false,
-            resolvers: [hello_1.HelloResolver, post_1.PostResolver, user_1.UserResolver, comment_1.CommentResolver, upvote_1.UpvoteResolver],
+            resolvers: [
+                hello_1.HelloResolver,
+                post_1.PostResolver,
+                user_1.UserResolver,
+                comment_1.CommentResolver,
+                upvote_1.UpvoteResolver,
+                savePost_1.SavedPostResolver,
+            ],
         }),
     });
     await apolloServer.start();

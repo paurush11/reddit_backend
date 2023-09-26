@@ -10,6 +10,7 @@ import {
 import { User } from "./User";
 import { UpVotes } from "./UpVotes";
 import { PostComments } from "./Comments";
+import { SavedPost } from "./SavedPost";
 
 @ObjectType()
 @Entity()
@@ -37,6 +38,13 @@ export class Post extends BaseEntity {
     onDelete: "CASCADE",
   })
   comments: PostComments[];
+
+  @Field(() => [SavedPost], { nullable: true })
+  @OneToMany(() => SavedPost, (savedPost) => savedPost.user, {
+    cascade: true,
+    eager: true,
+  })
+  savedPosts: SavedPost[];
 
   @Field(() => Int, { nullable: true })
   voteStatus: number | null;

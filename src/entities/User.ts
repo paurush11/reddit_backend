@@ -9,6 +9,7 @@ import {
 import { Post } from "./Post";
 import { UpVotes } from "./UpVotes";
 import { PostComments } from "./Comments";
+import { SavedPost } from "./SavedPost";
 
 @ObjectType()
 @Entity()
@@ -38,6 +39,13 @@ export class User extends BaseEntity {
     eager: true,
   })
   comments: PostComments[];
+
+  @Field(() => [SavedPost], { nullable: true })
+  @OneToMany(() => SavedPost, (savedPost) => savedPost.user, {
+    cascade: true,
+    eager: true,
+  })
+  savedPosts: SavedPost[];
 
   @Field(() => [UpVotes], { nullable: true })
   @OneToMany(() => UpVotes, (upVotes) => upVotes.user, {

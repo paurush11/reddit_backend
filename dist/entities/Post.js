@@ -15,6 +15,7 @@ const typeorm_1 = require("typeorm");
 const User_1 = require("./User");
 const UpVotes_1 = require("./UpVotes");
 const Comments_1 = require("./Comments");
+const SavedPost_1 = require("./SavedPost");
 let Post = exports.Post = class Post extends typeorm_1.BaseEntity {
     constructor() {
         super(...arguments);
@@ -51,6 +52,14 @@ __decorate([
     }),
     __metadata("design:type", Array)
 ], Post.prototype, "comments", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(() => [SavedPost_1.SavedPost], { nullable: true }),
+    (0, typeorm_1.OneToMany)(() => SavedPost_1.SavedPost, (savedPost) => savedPost.user, {
+        cascade: true,
+        eager: true,
+    }),
+    __metadata("design:type", Array)
+], Post.prototype, "savedPosts", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => type_graphql_1.Int, { nullable: true }),
     __metadata("design:type", Object)

@@ -18,6 +18,7 @@ const Comments_1 = require("../entities/Comments");
 const type_graphql_1 = require("type-graphql");
 const Post_1 = require("../entities/Post");
 const createPostLoader_1 = require("../utils/createPostLoader");
+const isAuth_1 = require("../middleware/isAuth");
 let CommentResolver = exports.CommentResolver = class CommentResolver {
     creator(comments, ctx) {
         console.log(comments);
@@ -41,6 +42,23 @@ let CommentResolver = exports.CommentResolver = class CommentResolver {
         }).save();
         console.log(comment);
         return comment;
+    }
+    async deleteComment(ctx, PostId, CommentId) {
+        const comment = await Comments_1.PostComments.findOne({
+            where: {
+                creatorId: ctx.req.session.user,
+                postId: PostId,
+                _id: CommentId,
+            },
+        });
+        if (comment === null || comment === void 0 ? void 0 : comment.hasReplies) {
+            console.log("Comment has replies!! Cant delete");
+            return false;
+        }
+        const res = await Comments_1.PostComments.delete({
+            _id: comment === null || comment === void 0 ? void 0 : comment._id,
+        });
+        return res.affected === 1;
     }
 };
 __decorate([
@@ -75,6 +93,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number, String]),
     __metadata("design:returntype", Promise)
 ], CommentResolver.prototype, "addComments", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Boolean),
+    (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
+    __param(0, (0, type_graphql_1.Ctx)()),
+    __param(1, (0, type_graphql_1.Arg)("PostId", () => type_graphql_1.Int)),
+    __param(2, (0, type_graphql_1.Arg)("CommentId", () => type_graphql_1.Int)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Number]),
+    __metadata("design:returntype", Promise)
+], CommentResolver.prototype, "deleteComment", null);
 exports.CommentResolver = CommentResolver = __decorate([
     (0, type_graphql_1.Resolver)(Comments_1.PostComments)
 ], CommentResolver);

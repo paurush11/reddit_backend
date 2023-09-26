@@ -67,6 +67,11 @@ __decorate([
     (0, typeorm_1.Column)({ type: "timestamptz" }),
     __metadata("design:type", Date)
 ], PostComments.prototype, "updatedAt", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(),
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Boolean)
+], PostComments.prototype, "hasReplies", void 0);
 exports.PostComments = PostComments = __decorate([
     (0, type_graphql_1.ObjectType)(),
     (0, typeorm_1.Entity)()

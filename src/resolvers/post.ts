@@ -204,7 +204,6 @@ export class PostResolver {
     return post[0]; // Since query method will return an array, just select the first element.
   }
 
-
   @Mutation(() => Post)
   @UseMiddleware(isAuth)
   async createPost(
@@ -268,8 +267,4 @@ export class PostResolver {
     console.log(result);
     return (await result).raw[0];
   }
-
-  
-
-  
 }

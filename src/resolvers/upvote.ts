@@ -3,14 +3,21 @@ import { UpVotes } from "../entities/UpVotes";
 import { User } from "../entities/User";
 import { isAuth } from "../middleware/isAuth";
 import { MyContext } from "../types";
-import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
+import {
+  Arg,
+  Ctx,
+  Int,
+  Mutation,
+  Query,
+  Resolver,
+  UseMiddleware,
+} from "type-graphql";
 @Resolver()
 export class UpvoteResolver {
   @Query(() => String)
   hello() {
     return "hey Paurush";
   }
-
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
@@ -53,17 +60,19 @@ export class UpvoteResolver {
         where _id = ${postId};`);
       });
 
-      if(user){
+      if (user) {
         const newUpVote = await UpVotes.findOne({
-            where: {
-              userId: userId,
-              postId: postId,
-            },
-        })
-        if(newUpVote){
-           const index = await user.upVotes.findIndex((upvote)=>upvote.postId === postId && upvote.userId === userId)
-           user.upVotes[index] = newUpVote;
-           await User.save(user)
+          where: {
+            userId: userId,
+            postId: postId,
+          },
+        });
+        if (newUpVote) {
+          const index = await user.upVotes.findIndex(
+            (upvote) => upvote.postId === postId && upvote.userId === userId,
+          );
+          user.upVotes[index] = newUpVote;
+          await User.save(user);
         }
       }
     } else if (!upVote) {
