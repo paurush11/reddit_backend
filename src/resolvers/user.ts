@@ -12,7 +12,7 @@ import {
   Resolver,
   Root,
 } from "type-graphql";
-import { COOKIE_NAME, FORGOT_PASSWORD } from "../constants";
+
 import { UserNameOrEmailPassword } from "../utils/UserNameOrEmailPassword";
 import { validate } from "../utils/validate";
 import { sendEmail } from "../utils/sendEmail";
@@ -141,7 +141,7 @@ export class UserResolver {
     }
     console.log(newPassword);
     console.log(token);
-    const key = FORGOT_PASSWORD + token;
+    const key = process.env.FORGOT_PASSWORD + token;
     const userId = (await ctx.redis.get(key)) as string;
     const user = await User.findOne({
       where: {
@@ -191,7 +191,7 @@ export class UserResolver {
     console.log(user.password);
     const token = crypto.randomUUID();
     await ctx.redis.set(
-      FORGOT_PASSWORD + token,
+      process.env.FORGOT_PASSWORD + token,
       user._id,
       "EX",
       1000 * 60 * 60 * 24 * 3,
@@ -251,7 +251,7 @@ export class UserResolver {
   logout(@Ctx() ctx: MyContext) {
     return new Promise((resolve) =>
       ctx.req.session.destroy((err) => {
-        ctx.res.clearCookie(COOKIE_NAME);
+        ctx.res.clearCookie(process.env.COOKIE_NAME as string);
         if (err) {
           console.log(err);
           resolve(err);

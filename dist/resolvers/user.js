@@ -42,7 +42,6 @@ exports.UserResolver = void 0;
 const argon2_1 = __importDefault(require("argon2"));
 const User_1 = require("../entities/User");
 const type_graphql_1 = require("type-graphql");
-const constants_1 = require("../constants");
 const UserNameOrEmailPassword_1 = require("../utils/UserNameOrEmailPassword");
 const validate_1 = require("../utils/validate");
 const sendEmail_1 = require("../utils/sendEmail");
@@ -159,7 +158,7 @@ let UserResolver = exports.UserResolver = class UserResolver {
         }
         console.log(newPassword);
         console.log(token);
-        const key = constants_1.FORGOT_PASSWORD + token;
+        const key = process.env.FORGOT_PASSWORD + token;
         const userId = (await ctx.redis.get(key));
         const user = await User_1.User.findOne({
             where: {
@@ -199,7 +198,7 @@ let UserResolver = exports.UserResolver = class UserResolver {
         console.log(UserNameOrEmail);
         console.log(user.password);
         const token = crypto.randomUUID();
-        await ctx.redis.set(constants_1.FORGOT_PASSWORD + token, user._id, "EX", 1000 * 60 * 60 * 24 * 3);
+        await ctx.redis.set(process.env.FORGOT_PASSWORD + token, user._id, "EX", 1000 * 60 * 60 * 24 * 3);
         console.log(`http://localhost:3000/change-password/${token}`);
         await (0, sendEmail_1.sendEmail)(user.email, `<a href='http://localhost:3000/change-password/${token}'>Reset Password</a>`);
         return true;
@@ -240,7 +239,7 @@ let UserResolver = exports.UserResolver = class UserResolver {
     }
     logout(ctx) {
         return new Promise((resolve) => ctx.req.session.destroy((err) => {
-            ctx.res.clearCookie(constants_1.COOKIE_NAME);
+            ctx.res.clearCookie(process.env.COOKIE_NAME);
             if (err) {
                 console.log(err);
                 resolve(err);

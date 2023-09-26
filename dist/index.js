@@ -42,7 +42,7 @@ const main = async () => {
         disableTouch: true,
     });
     app.use((0, express_session_1.default)({
-        name: constants_1.COOKIE_NAME,
+        name: process.env.COOKIE_NAME,
         store: redisStore,
         resave: false,
         saveUninitialized: false,

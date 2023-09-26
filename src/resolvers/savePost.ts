@@ -27,7 +27,7 @@ export class SavedPostResolver {
         postId: postId,
       },
     });
-    if(!post)return testSavedPost
+    if (!post) return testSavedPost;
     console.log(post);
     return post;
   }
@@ -71,11 +71,11 @@ export class SavedPostResolver {
     });
     if (!isPostSaved) return false;
 
-    const res  = await SavedPost.delete({
-        userId: ctx.req.session.user,
-        postId: postId,
-      })
-    console.log(res)
+    const res = await SavedPost.delete({
+      userId: ctx.req.session.user,
+      postId: postId,
+    });
+    console.log(res);
     return true;
   }
 }

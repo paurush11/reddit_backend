@@ -27,10 +27,7 @@ export class CommentResolver {
     return ctx.userLoader.load(comments.creatorId);
   }
   @FieldResolver(() => Post)
-  async post(
-    @Root() comments: PostComments,
-
-  ): Promise<Post | null> {
+  async post(@Root() comments: PostComments): Promise<Post | null> {
     const postLoader = createPostLoader();
     let post = await postLoader.load(comments.postId);
     return post;

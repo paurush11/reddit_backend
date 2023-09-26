@@ -5,7 +5,7 @@ import session from "express-session";
 import Redis from "ioredis";
 import "reflect-metadata";
 import { buildSchema } from "type-graphql";
-import { COOKIE_NAME, __prod__ } from "./constants";
+import { __prod__ } from "./constants";
 import { AppDataSource } from "./dataSource";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
@@ -47,7 +47,7 @@ const main = async () => {
   });
   app.use(
     session({
-      name: COOKIE_NAME,
+      name: process.env.COOKIE_NAME,
       store: redisStore,
       resave: false, // required: force lightweight session keep alive (touch)
       saveUninitialized: false, // recommended: only save session when data exists

@@ -9,13 +9,14 @@ const _1691700865365_migrations_1 = require("./migrations/1691700865365-migratio
 const UpVotes_1 = require("./entities/UpVotes");
 const Comments_1 = require("./entities/Comments");
 const SavedPost_1 = require("./entities/SavedPost");
+require('dotenv').config();
 exports.AppDataSource = new typeorm_1.DataSource({
     type: "postgres",
-    host: constants_1.DB_HOST,
+    host: process.env.DB_HOST,
     port: constants_1.DB_PORT,
-    username: constants_1.DATASRC_USERNAME,
-    password: constants_1.DATASRC_PASSWORD,
-    database: constants_1.DB_NAME,
+    username: process.env.DATASRC_USERNAME,
+    password: process.env.DATASRC_PASSWORD,
+    database: process.env.DATABASE_NAME,
     synchronize: true,
     logging: true,
     entities: [Post_1.Post, User_1.User, UpVotes_1.UpVotes, Comments_1.PostComments, SavedPost_1.SavedPost],

@@ -1,12 +1,12 @@
 "use strict";
 import nodemailer from "nodemailer";
-import { TEST_EMAIL, TEST_PASSWORD } from "../constants";
+
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: TEST_EMAIL,
-    pass: TEST_PASSWORD,
+    user: process.env.TEST_EMAIL,
+    pass: process.env.TEST_PASSWORD,
   },
 });
 
