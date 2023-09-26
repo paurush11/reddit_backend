@@ -9,42 +9,31 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpVotes = void 0;
+exports.Comment = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
-const User_1 = require("./User");
 const Post_1 = require("./Post");
-let UpVotes = exports.UpVotes = class UpVotes extends typeorm_1.BaseEntity {
+let Comment = exports.Comment = class Comment extends typeorm_1.BaseEntity {
 };
 __decorate([
     (0, type_graphql_1.Field)(),
-    (0, typeorm_1.Column)({ type: "int" }),
-    __metadata("design:type", Number)
-], UpVotes.prototype, "value", void 0);
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Comment.prototype, "description", void 0);
 __decorate([
     (0, type_graphql_1.Field)(),
     (0, typeorm_1.PrimaryColumn)(),
     __metadata("design:type", Number)
-], UpVotes.prototype, "userId", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(() => User_1.User),
-    (0, typeorm_1.ManyToOne)(() => User_1.User, (user) => user.upVotes),
-    __metadata("design:type", User_1.User)
-], UpVotes.prototype, "user", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(),
-    (0, typeorm_1.PrimaryColumn)(),
-    __metadata("design:type", Number)
-], UpVotes.prototype, "postId", void 0);
+], Comment.prototype, "postId", void 0);
 __decorate([
     (0, type_graphql_1.Field)(() => Post_1.Post),
-    (0, typeorm_1.ManyToOne)(() => Post_1.Post, (post) => post.upVotes, {
+    (0, typeorm_1.ManyToOne)(() => Post_1.Post, (post) => post.comments, {
         onDelete: "CASCADE",
     }),
     __metadata("design:type", Post_1.Post)
-], UpVotes.prototype, "post", void 0);
-exports.UpVotes = UpVotes = __decorate([
+], Comment.prototype, "post", void 0);
+exports.Comment = Comment = __decorate([
     (0, type_graphql_1.ObjectType)(),
     (0, typeorm_1.Entity)()
-], UpVotes);
-//# sourceMappingURL=UpVotes.js.map
+], Comment);
+//# sourceMappingURL=Comment.js.map

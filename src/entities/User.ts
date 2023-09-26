@@ -8,6 +8,7 @@ import {
 } from "typeorm";
 import { Post } from "./Post";
 import { UpVotes } from "./UpVotes";
+import { PostComments } from "./Comments";
 
 @ObjectType()
 @Entity()
@@ -30,6 +31,13 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Post, (post) => post.creator)
   posts: Post[];
+
+  @Field(() => [PostComments], { nullable: true })
+  @OneToMany(() => PostComments, (comment) => comment.creator, {
+    cascade: true,
+    eager: true,
+  })
+  comments: PostComments[];
 
   @Field(() => [UpVotes], { nullable: true })
   @OneToMany(() => UpVotes, (upVotes) => upVotes.user, {

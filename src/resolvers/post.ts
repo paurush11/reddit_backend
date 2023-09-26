@@ -1,4 +1,3 @@
-import { MyContext } from "../types";
 import {
   Arg,
   Ctx,
@@ -18,7 +17,8 @@ import { Post } from "../entities/Post";
 import { UpVotes } from "../entities/UpVotes";
 import { User } from "../entities/User";
 import { isAuth } from "../middleware/isAuth";
-import { SaveOptions, RemoveOptions } from "typeorm";
+import { MyContext } from "../types";
+import { PostComments } from "../entities/Comments";
 
 @InputType()
 class PostInput {
@@ -49,6 +49,11 @@ export class PostResolver {
     // });
     return ctx.userLoader.load(post.creatorId);
   }
+  @FieldResolver(() => [PostComments])
+  async comments(@Root() post: Post) {
+    return await PostComments.find({ where: { postId: post._id } });
+  }
+
   @FieldResolver(() => Int, { nullable: true })
   async voteStatus(
     @Root() post: Post,
@@ -66,8 +71,6 @@ export class PostResolver {
 
     return up_vote.value;
   }
-  @Query(() => UpVotes)
-  async myUpVotes(@Ctx() ctx: MyContext) {}
 
   @Query(() => PaginatedPosts)
   async myPosts(
@@ -201,76 +204,6 @@ export class PostResolver {
     return post[0]; // Since query method will return an array, just select the first element.
   }
 
-  @Mutation(() => Boolean)
-  @UseMiddleware(isAuth)
-  async vote(
-    @Arg("postId", () => Int) postId: number,
-    @Arg("value", () => Int) value: number,
-    @Ctx() ctx: MyContext,
-  ) {
-    const userId = ctx.req.session.user;
-    const isUpvote = value !== -1;
-    const realValue = isUpvote ? 1 : -1;
-    // UpVotes.insert({
-    //   userId,
-    //   postId,
-    //   value,
-    // });
-    const upVote = await UpVotes.findOne({
-      where: {
-        postId: postId,
-        userId: userId,
-      },
-    });
-
-    const user = await User.findOne({
-      where: {
-        _id: userId,
-      },
-    });
-
-    if (upVote && upVote.value !== realValue) {
-      /// user aldready voted and now changing
-      await AppDataSource.transaction(async (tm) => {
-        await tm.query(
-          `update up_votes set value = $1 where "postId" = $2 and "userId" = $3`,
-          [realValue, postId, userId],
-        );
-
-        await tm.query(` update post 
-        set points = points + ${2 * realValue}
-        where _id = ${postId};`);
-      });
-    } else if (!upVote) {
-      await AppDataSource.transaction(async (tm) => {
-        /// user did not vote
-        await tm.query(
-          `insert into up_votes ("userId", "postId", "value") values (${userId}, ${postId}, ${realValue});`,
-        );
-
-        await tm.query(` update post 
-        set points = points + ${realValue}
-        where _id = ${postId};`);
-      });
-
-      if (user) {
-        const newUpVote = await UpVotes.findOne({
-          where: {
-            userId: userId,
-            postId: postId,
-          },
-        });
-        if (newUpVote) {
-          if (!user.upVotes) user.upVotes = [];
-
-          user.upVotes.push(newUpVote);
-          await User.save(user);
-        }
-      }
-    }
-
-    return true;
-  }
 
   @Mutation(() => Post)
   @UseMiddleware(isAuth)
@@ -335,4 +268,8 @@ export class PostResolver {
     console.log(result);
     return (await result).raw[0];
   }
+
+  
+
+  
 }

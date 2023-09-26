@@ -13,6 +13,8 @@ import { UserResolver } from "./resolvers/user";
 import { MyContext } from "./types";
 import { createUserLoader } from "./utils/createUserLoader";
 import { createUpVotesLoader } from "./utils/createUpvotesLoader";
+import { CommentResolver } from "./resolvers/comment";
+import { UpvoteResolver } from "./resolvers/upvote";
 
 const main = async () => {
   AppDataSource.initialize()
@@ -71,7 +73,7 @@ const main = async () => {
 
     schema: await buildSchema({
       validate: false,
-      resolvers: [HelloResolver, PostResolver, UserResolver],
+      resolvers: [HelloResolver, PostResolver, UserResolver, CommentResolver, UpvoteResolver],
     }),
   });
   await apolloServer.start();
