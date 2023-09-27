@@ -9,7 +9,7 @@ const _1691700865365_migrations_1 = require("./migrations/1691700865365-migratio
 const UpVotes_1 = require("./entities/UpVotes");
 const Comments_1 = require("./entities/Comments");
 const SavedPost_1 = require("./entities/SavedPost");
-require('dotenv').config();
+require("dotenv").config();
 exports.AppDataSource = new typeorm_1.DataSource({
     type: "postgres",
     host: process.env.DB_HOST,
