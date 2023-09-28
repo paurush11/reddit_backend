@@ -20,6 +20,7 @@ const UpVotes_1 = require("../entities/UpVotes");
 const User_1 = require("../entities/User");
 const isAuth_1 = require("../middleware/isAuth");
 const Comments_1 = require("../entities/Comments");
+const createPostLoader_1 = require("../utils/createPostLoader");
 let PostInput = class PostInput {
 };
 __decorate([
@@ -58,7 +59,7 @@ let PostResolver = exports.PostResolver = class PostResolver {
             userId: ctx.req.session.user,
             postId: post._id,
         });
-        return up_vote.value;
+        return up_vote === null || up_vote === void 0 ? void 0 : up_vote.value;
     }
     async myPosts(limit, cursor, ctx) {
         const userId = ctx.req.session.user;
@@ -172,6 +173,118 @@ let PostResolver = exports.PostResolver = class PostResolver {
         console.log(result);
         return (await result).raw[0];
     }
+    async hidePost(ctx, id) {
+        const post = await Post_1.Post.findOne({
+            where: {
+                _id: id,
+            },
+        });
+        if (post) {
+            if (!post.hiddenBy) {
+                post.hiddenBy = [ctx.req.session.user];
+            }
+            else {
+                post.hiddenBy.push(ctx.req.session.user);
+            }
+            await post.save();
+        }
+        else {
+            return false;
+        }
+        return true;
+    }
+    async unHidePost(ctx, id) {
+        const post = await Post_1.Post.findOne({
+            where: {
+                _id: id,
+            },
+        });
+        if (post) {
+            post.hiddenBy = post.hiddenBy.filter((p) => p !== ctx.req.session.user);
+            await post.save();
+        }
+        else {
+            return false;
+        }
+        return true;
+    }
+    async getHiddenPosts(limit, cursor, ctx) {
+        const userId = ctx.req.session.user;
+        const realLimit = Math.min(50, limit);
+        const realLimitPlusOne = realLimit + 1;
+        const replaceableValues = [realLimitPlusOne, userId];
+        if (cursor) {
+            replaceableValues.push(new Date(Date.parse(cursor)));
+        }
+        const allPost = await Post_1.Post.find({});
+        const postLoader = (0, createPostLoader_1.createPostLoader)();
+        const postIds = allPost
+            .filter((post) => post.hiddenBy && post.hiddenBy.includes(ctx.req.session.user))
+            .map((p) => p._id);
+        const postPromise = await postIds.map(async (id) => {
+            return postLoader.load(id);
+        });
+        const posts = await Promise.all(postPromise);
+        return {
+            Posts: posts.slice(0, realLimit),
+            hasMore: posts.length === realLimitPlusOne,
+        };
+    }
+    async getSavedPosts(limit, cursor, ctx) {
+        const userId = ctx.req.session.user;
+        const realLimit = Math.min(50, limit);
+        const realLimitPlusOne = realLimit + 1;
+        const replaceableValues = [realLimitPlusOne, userId];
+        if (cursor) {
+            replaceableValues.push(new Date(Date.parse(cursor)));
+        }
+        const allPost = await Post_1.Post.find({});
+        const postLoader = (0, createPostLoader_1.createPostLoader)();
+        const postIds = allPost
+            .filter((post) => post.savedBy && post.savedBy.includes(ctx.req.session.user))
+            .map((p) => p._id);
+        const postPromise = await postIds.map(async (id) => {
+            return postLoader.load(id);
+        });
+        const posts = await Promise.all(postPromise);
+        return {
+            Posts: posts.slice(0, realLimit),
+            hasMore: posts.length === realLimitPlusOne,
+        };
+    }
+    async savePost(ctx, postId) {
+        const post = await Post_1.Post.findOne({
+            where: {
+                _id: postId,
+            },
+        });
+        if (!post) {
+            return false;
+        }
+        if (!post.savedBy) {
+            post.savedBy = [ctx.req.session.user];
+        }
+        else {
+            post.savedBy.push(ctx.req.session.user);
+        }
+        await post.save();
+        return true;
+    }
+    async deleteSavedPost(ctx, postId) {
+        const post = await Post_1.Post.findOne({
+            where: {
+                _id: postId,
+            },
+        });
+        if (post) {
+            post.savedBy = post.savedBy.filter((p) => p !== ctx.req.session.user);
+            await post.save();
+        }
+        else {
+            return false;
+        }
+        return true;
+    }
 };
 __decorate([
     (0, type_graphql_1.FieldResolver)(() => User_1.User),
@@ -249,6 +362,62 @@ __decorate([
     __metadata("design:paramtypes", [Number, String, String, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "updatePost", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Boolean),
+    (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
+    __param(0, (0, type_graphql_1.Ctx)()),
+    __param(1, (0, type_graphql_1.Arg)("id", () => type_graphql_1.Int)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "hidePost", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Boolean),
+    (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
+    __param(0, (0, type_graphql_1.Ctx)()),
+    __param(1, (0, type_graphql_1.Arg)("id", () => type_graphql_1.Int)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "unHidePost", null);
+__decorate([
+    (0, type_graphql_1.Query)(() => PaginatedPosts),
+    (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
+    __param(0, (0, type_graphql_1.Arg)("limit")),
+    __param(1, (0, type_graphql_1.Arg)("cursor", () => String, { nullable: true })),
+    __param(2, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "getHiddenPosts", null);
+__decorate([
+    (0, type_graphql_1.Query)(() => PaginatedPosts),
+    (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
+    __param(0, (0, type_graphql_1.Arg)("limit")),
+    __param(1, (0, type_graphql_1.Arg)("cursor", () => String, { nullable: true })),
+    __param(2, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "getSavedPosts", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Boolean),
+    (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
+    __param(0, (0, type_graphql_1.Ctx)()),
+    __param(1, (0, type_graphql_1.Arg)("postId", () => type_graphql_1.Int)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "savePost", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Boolean),
+    (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
+    __param(0, (0, type_graphql_1.Ctx)()),
+    __param(1, (0, type_graphql_1.Arg)("postId", () => type_graphql_1.Int)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "deleteSavedPost", null);
 exports.PostResolver = PostResolver = __decorate([
     (0, type_graphql_1.Resolver)(() => Post_1.Post)
 ], PostResolver);

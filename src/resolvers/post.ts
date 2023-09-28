@@ -19,6 +19,7 @@ import { User } from "../entities/User";
 import { isAuth } from "../middleware/isAuth";
 import { MyContext } from "../types";
 import { PostComments } from "../entities/Comments";
+import { createPostLoader } from "../utils/createPostLoader";
 
 @InputType()
 class PostInput {
@@ -69,7 +70,7 @@ export class PostResolver {
       postId: post._id,
     });
 
-    return up_vote.value;
+    return up_vote?.value;
   }
 
   @Query(() => PaginatedPosts)
@@ -266,5 +267,154 @@ export class PostResolver {
       .execute();
     console.log(result);
     return (await result).raw[0];
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async hidePost(@Ctx() ctx: MyContext, @Arg("id", () => Int) id: number) {
+    const post = await Post.findOne({
+      where: {
+        _id: id,
+      },
+    });
+    if (post) {
+      if (!post.hiddenBy) {
+        post.hiddenBy = [ctx.req.session.user as number];
+      } else {
+        post.hiddenBy.push(ctx.req.session.user as number);
+      }
+
+      await post.save();
+    } else {
+      return false;
+    }
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async unHidePost(@Ctx() ctx: MyContext, @Arg("id", () => Int) id: number) {
+    const post = await Post.findOne({
+      where: {
+        _id: id,
+      },
+    });
+    if (post) {
+      post.hiddenBy = post.hiddenBy.filter(
+        (p) => p !== (ctx.req.session.user as number),
+      );
+      await post.save();
+    } else {
+      return false;
+    }
+    return true;
+  }
+
+  @Query(() => PaginatedPosts)
+  @UseMiddleware(isAuth)
+  async getHiddenPosts(
+    @Arg("limit") limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
+    @Ctx() ctx: MyContext,
+  ) {
+    const userId = ctx.req.session.user;
+    const realLimit = Math.min(50, limit);
+    const realLimitPlusOne = realLimit + 1;
+    const replaceableValues: any = [realLimitPlusOne, userId];
+    if (cursor) {
+      replaceableValues.push(new Date(Date.parse(cursor)));
+    }
+    const allPost = await Post.find({});
+    const postLoader = createPostLoader();
+    const postIds = allPost
+      .filter(
+        (post) =>
+          post.hiddenBy && post.hiddenBy.includes(ctx.req.session.user as number),
+      )
+      .map((p) => p._id);
+    const postPromise = await postIds.map(async (id) => {
+      return postLoader.load(id);
+    });
+    const posts = await Promise.all(postPromise);
+    return {
+      Posts: posts.slice(0, realLimit),
+      hasMore: posts.length === realLimitPlusOne,
+    };
+  }
+  @Query(() => PaginatedPosts)
+  @UseMiddleware(isAuth)
+  async getSavedPosts(
+    @Arg("limit") limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
+    @Ctx() ctx: MyContext,
+  ) {
+    const userId = ctx.req.session.user;
+    const realLimit = Math.min(50, limit);
+    const realLimitPlusOne = realLimit + 1;
+    const replaceableValues: any = [realLimitPlusOne, userId];
+    if (cursor) {
+      replaceableValues.push(new Date(Date.parse(cursor)));
+    }
+    const allPost = await Post.find({});
+    const postLoader = createPostLoader();
+    const postIds = allPost
+      .filter(
+        (post) =>
+          post.savedBy && post.savedBy.includes(ctx.req.session.user as number),
+      )
+      .map((p) => p._id);
+    const postPromise = await postIds.map(async (id) => {
+      return postLoader.load(id);
+    });
+    const posts = await Promise.all(postPromise);
+    return {
+      Posts: posts.slice(0, realLimit),
+      hasMore: posts.length === realLimitPlusOne,
+    };
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async savePost(
+    @Ctx() ctx: MyContext,
+    @Arg("postId", () => Int) postId: number,
+  ) {
+    const post = await Post.findOne({
+      where: {
+        _id: postId,
+      },
+    });
+    if (!post) {
+      return false;
+    }
+    if (!post.savedBy) {
+      post.savedBy = [ctx.req.session.user as number];
+    } else {
+      post.savedBy.push(ctx.req.session.user as number);
+    }
+    await post.save();
+
+    return true;
+  }
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async deleteSavedPost(
+    @Ctx() ctx: MyContext,
+    @Arg("postId", () => Int) postId: number,
+  ) {
+    const post = await Post.findOne({
+      where: {
+        _id: postId,
+      },
+    });
+    if (post) {
+      post.savedBy = post.savedBy.filter(
+        (p) => p !== (ctx.req.session.user as number),
+      );
+      await post.save();
+    } else {
+      return false;
+    }
+    return true;
   }
 }
