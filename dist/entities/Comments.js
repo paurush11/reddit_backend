@@ -68,7 +68,7 @@ __decorate([
     __metadata("design:type", Date)
 ], PostComments.prototype, "updatedAt", void 0);
 __decorate([
-    (0, type_graphql_1.Field)(),
+    (0, type_graphql_1.Field)({ nullable: true }),
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", Boolean)
 ], PostComments.prototype, "hasReplies", void 0);

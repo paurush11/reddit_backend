@@ -19,7 +19,6 @@ const createUserLoader_1 = require("./utils/createUserLoader");
 const createUpvotesLoader_1 = require("./utils/createUpvotesLoader");
 const comment_1 = require("./resolvers/comment");
 const upvote_1 = require("./resolvers/upvote");
-const savePost_1 = require("./resolvers/savePost");
 const main = async () => {
     dataSource_1.AppDataSource.initialize()
         .then(() => {
@@ -71,7 +70,6 @@ const main = async () => {
                 user_1.UserResolver,
                 comment_1.CommentResolver,
                 upvote_1.UpvoteResolver,
-                savePost_1.SavedPostResolver,
             ],
         }),
     });

@@ -8,7 +8,6 @@ const constants_1 = require("./constants");
 const _1691700865365_migrations_1 = require("./migrations/1691700865365-migrations");
 const UpVotes_1 = require("./entities/UpVotes");
 const Comments_1 = require("./entities/Comments");
-const SavedPost_1 = require("./entities/SavedPost");
 require("dotenv").config();
 exports.AppDataSource = new typeorm_1.DataSource({
     type: "postgres",
@@ -19,7 +18,7 @@ exports.AppDataSource = new typeorm_1.DataSource({
     database: process.env.DATABASE_NAME,
     synchronize: true,
     logging: true,
-    entities: [Post_1.Post, User_1.User, UpVotes_1.UpVotes, Comments_1.PostComments, SavedPost_1.SavedPost],
+    entities: [Post_1.Post, User_1.User, UpVotes_1.UpVotes, Comments_1.PostComments],
     migrations: [_1691700865365_migrations_1.Migrations1691700865366],
 });
 //# sourceMappingURL=dataSource.js.map

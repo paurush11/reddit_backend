@@ -51,7 +51,7 @@ export class PostComments extends BaseEntity {
   @Column({ type: "timestamptz" })
   updatedAt: Date = new Date();
 
-  @Field()
+  @Field({nullable: true})
   @Column({ nullable: true })
   hasReplies: Boolean;
 }

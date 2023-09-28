@@ -5,7 +5,7 @@ import { DB_PORT } from "./constants";
 import { Migrations1691700865366 } from "./migrations/1691700865365-migrations";
 import { UpVotes } from "./entities/UpVotes";
 import { PostComments } from "./entities/Comments";
-import { SavedPost } from "./entities/SavedPost";
+
 require("dotenv").config();
 
 export const AppDataSource = new DataSource({
@@ -17,6 +17,6 @@ export const AppDataSource = new DataSource({
   database: process.env.DATABASE_NAME,
   synchronize: true,
   logging: true,
-  entities: [Post, User, UpVotes, PostComments, SavedPost],
+  entities: [Post, User, UpVotes, PostComments],
   migrations: [Migrations1691700865366],
 });
